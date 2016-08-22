@@ -1,0 +1,7 @@
+// SubsetSampling docstrings are defined in SubsetSamplingImplementation_doc.i.in
+
+//%feature("docstring") OTSUBSETINVERSE::SubsetSampling
+//OTSUBSETINVERSE_SubsetSampling_doc
+//%feature("docstring") OTSUBSETINVERSE::SubsetSampling::square
+//OTSUBSETINVERSE_SubsetSampling_square_doc
+
