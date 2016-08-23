@@ -10,4 +10,4 @@ Reference
     :toctree: _generated/
     :template: class.rst_t
   
-    SubsetSampling
+    SubsetInverseSampling

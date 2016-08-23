@@ -69,10 +69,10 @@ public:
   
   /** Accessor to the achieved number of steps */
   OT::UnsignedInteger getNumberOfSteps();
-  
-  /** @DEPRECATED Accessor to the intermediate thresholds */
-  OT::NumericalPoint getThresholds() const;
-  
+
+  OT::NumericalScalar computeThresholdConfidenceLength(OT::NumericalScalar level) const;
+  OT::NumericalSample getSampleThreshold() const;
+    
   /** Stepwise result accessors */
   OT::NumericalPoint getThresholdPerStep() const;
   OT::NumericalPoint getGammaPerStep() const;
@@ -128,6 +128,7 @@ private:
   OT::NumericalScalar betaMin_;// pre-sampling hypersphere exclusion radius
   OT::Bool keepEventSample_;// do we keep the event sample ?
   OT::NumericalScalar finalTargetProbability_;// final wanted target probability
+  OT::NumericalSample sampleThreshold_;// sample of the threshold distribution
 
   // some results
   OT::UnsignedInteger numberOfSteps_;// number of subset steps

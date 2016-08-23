@@ -257,6 +257,18 @@ void SubsetInverseSampling::run()
     ++ numberOfSteps_;
   }
 
+  // compute the threshold distribution
+  Distribution probabilityDistribution = Normal(probabilityEstimate, sqrt(varianceEstimate));
+  NumericalScalar sizeSample = 10000;
+  NumericalSample sampleProbDistribution = probabilityDistribution.getSample(sizeSample);
+  sampleThreshold_ = NumericalSample(sizeSample, 1);
+  for ( UnsignedInteger i = 0; i < sizeSample; ++ i )
+  { 
+    setTargetProbability(sampleProbDistribution[i][0]);
+    NumericalPoint threshold(1, computeThreshold());
+    sampleThreshold_[i] = threshold;
+  }
+
   //update the event with the final threshold
   Event modified_event = Event(RandomVector(getEvent().getFunction(), getEvent().getAntecedent()), getEvent().getOperator(), currentThreshold);
 
@@ -461,6 +473,19 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
   }
 }
 
+NumericalSample SubsetInverseSampling::getSampleThreshold() const
+{
+  return sampleThreshold_;
+}
+
+/* Confidence Length of the threshold */
+NumericalScalar SubsetInverseSampling::computeThresholdConfidenceLength(const NumericalScalar level) const
+{
+  NumericalScalar thresholdInf = sampleThreshold_.computeQuantile((1 - level)/2)[0];
+  NumericalScalar thresholdSup = sampleThreshold_.computeQuantile(level/2)[0];
+  return NumericalScalar (std::max(thresholdSup, thresholdInf) - std::min(thresholdSup, thresholdInf));
+}
+
 
 /* Markov parameter accessor */
 void SubsetInverseSampling::setProposalRange(NumericalScalar proposalRange)
@@ -502,12 +527,6 @@ NumericalScalar SubsetInverseSampling::getFinalTargetProbability() const
 UnsignedInteger SubsetInverseSampling::getNumberOfSteps()
 {
   return numberOfSteps_;
-}
-
-
-NumericalPoint SubsetInverseSampling::getThresholds() const
-{
-  return thresholdPerStep_;
 }
 
 
