@@ -1,6 +1,6 @@
 //                                               -*- C++ -*-
 /**
- *  @brief SubsetSamplingResult
+ *  @brief SubsetInverseSamplingResult
  *
  *  Copyright 2005-2016 Airbus-EDF-IMACS-Phimeca
  *
@@ -18,8 +18,8 @@
  *  along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef OTSUBSETINVERSE_SUBSETSAMPLINGRESULT_HXX
-#define OTSUBSETINVERSE_SUBSETSAMPLINGRESULT_HXX
+#ifndef OTSUBSETINVERSE_SUBSETINVERSESAMPLINGRESULT_HXX
+#define OTSUBSETINVERSE_SUBSETINVERSESAMPLINGRESULT_HXX
 
 #include <openturns/OT.hxx>
 #include "otsubsetinverse/OTSubsetInverseprivate.hxx"
@@ -27,25 +27,26 @@
 namespace OTSubsetInverse
 {
 
-class OTSUBSETINVERSE_API SubsetSamplingResult
+class OTSUBSETINVERSE_API SubsetInverseSamplingResult
 : public OT::SimulationResultImplementation
 {
   CLASSNAME;
 public:
   
   /** Constructor with parameters */
-  SubsetSamplingResult();
+  SubsetInverseSamplingResult();
 
   /** Constructor with parameters */
-  SubsetSamplingResult(const OT::Event & event,
+  SubsetInverseSamplingResult(const OT::Event & event,
                        const OT::NumericalScalar probabilityEstimate,
                        const OT::NumericalScalar varianceEstimate,
                        const OT::UnsignedInteger outerSampling,
                        const OT::UnsignedInteger blockSize,
-                       const OT::NumericalScalar coefficientOfVariation = 0.0);
+                       const OT::NumericalScalar coefficientOfVariation = 0.0,
+                       const OT::NumericalScalar threshold = 0.0);
 
   /** Virtual constructor */
-  virtual SubsetSamplingResult * clone() const;
+  virtual SubsetInverseSamplingResult * clone() const;
 
   /** Coefficient of variation estimate accessor */
   virtual OT::NumericalScalar getCoefficientOfVariation() const;
@@ -61,11 +62,12 @@ public:
 
 protected:
   OT::NumericalScalar coefficientOfVariation_;
+  OT::NumericalScalar threshold_;
 
 private:
 
-}; /* class SubsetSamplingResult */
+}; /* class SubsetInverseSamplingResult */
 
 } /* namespace OTSubsetInverse */
 
-#endif /* OTSUBSETINVERSE_SUBSETSAMPLINGRESULT_HXX */
+#endif /* OTSUBSETINVERSE_SUBSETINVERSESAMPLINGRESULT_HXX */

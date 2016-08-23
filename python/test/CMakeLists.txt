@@ -89,8 +89,8 @@ macro ( ot_pyinstallcheck_test TESTNAME )
           )
 endmacro ( ot_pyinstallcheck_test )
 
-ot_pyinstallcheck_test (SubsetSampling_R-S)
-ot_pyinstallcheck_test (SubsetSampling_Waarts_system_series)
+ot_pyinstallcheck_test (SubsetInverseSampling_R-S)
+ot_pyinstallcheck_test (SubsetInverseSampling_Waarts_system_series)
 
 add_custom_target ( pyinstallcheck COMMAND ${CMAKE_CTEST_COMMAND} -R "^pyinstallcheck_"
                     DEPENDS ${PYINSTALLCHECK_TO_BE_RUN}

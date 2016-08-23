@@ -1,6 +1,6 @@
 //                                               -*- C++ -*-
 /**
- *  @brief SubsetSampling
+ *  @brief SubsetInverseSampling
  *
  *  Copyright 2005-2016 Airbus-EDF-IMACS-Phimeca
  *
@@ -18,26 +18,26 @@
  *  along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "otsubsetinverse/SubsetSampling.hxx"
-#include "otsubsetinverse/SubsetSamplingResult.hxx"
+#include "otsubsetinverse/SubsetInverseSampling.hxx"
+#include "otsubsetinverse/SubsetInverseSamplingResult.hxx"
 
 using namespace OT;
 
 namespace OTSubsetInverse
 {
 
-CLASSNAMEINIT(SubsetSampling);
+CLASSNAMEINIT(SubsetInverseSampling);
 
-static Factory<SubsetSampling> Factory_SubsetSampling;
+static Factory<SubsetInverseSampling> Factory_SubsetInverseSampling;
 
-const UnsignedInteger SubsetSampling::DefaultMaximumOuterSampling = 10000;
-const NumericalScalar SubsetSampling::DefaultTargetProbability = 0.1;
-const NumericalScalar SubsetSampling::DefaultProposalRange = 2.0;
-const NumericalScalar SubsetSampling::DefaultBetaMin = 2.0;
+const UnsignedInteger SubsetInverseSampling::DefaultMaximumOuterSampling = 10000;
+const NumericalScalar SubsetInverseSampling::DefaultTargetProbability = 0.1;
+const NumericalScalar SubsetInverseSampling::DefaultProposalRange = 2.0;
+const NumericalScalar SubsetInverseSampling::DefaultBetaMin = 2.0;
 
 
 /* Default constructor */
-SubsetSampling::SubsetSampling()
+SubsetInverseSampling::SubsetInverseSampling()
 : Simulation()
 , proposalRange_(0.)
 , targetProbability_(0.)
@@ -45,12 +45,14 @@ SubsetSampling::SubsetSampling()
 , betaMin_(0.)
 , keepEventSample_(false)
 , numberOfSteps_(0)
+, finalTargetProbability_(0.)
 {
 }
 
 
 /* Constructor with parameters */
-SubsetSampling::SubsetSampling(const Event & event,
+SubsetInverseSampling::SubsetInverseSampling(const Event & event,
+                               const NumericalScalar finalTargetProbability,
                                const NumericalScalar proposalRange,
                                const NumericalScalar targetProbability)
 : Simulation(event)
@@ -60,23 +62,24 @@ SubsetSampling::SubsetSampling(const Event & event,
 , betaMin_(DefaultBetaMin)
 , keepEventSample_(false)
 , numberOfSteps_(0)
+, finalTargetProbability_(finalTargetProbability)
 {
   setMaximumOuterSampling( DefaultMaximumOuterSampling );// overide simulation default outersampling
   UnsignedInteger outputDimension = event.getFunction().getOutputDimension();
   if ( outputDimension > 1 )
-    throw InvalidArgumentException(HERE) << "Output dimension for SubsetSampling cannot be greater than 1, here output dimension=" << outputDimension;
+    throw InvalidArgumentException(HERE) << "Output dimension for SubsetInverseSampling cannot be greater than 1, here output dimension=" << outputDimension;
 }
 
 
 /* Virtual constructor */
-SubsetSampling * SubsetSampling::clone() const
+SubsetInverseSampling * SubsetInverseSampling::clone() const
 {
-  return new SubsetSampling(*this);
+  return new SubsetInverseSampling(*this);
 }
 
 
 /* Performs the actual computation. */
-void SubsetSampling::run()
+void SubsetInverseSampling::run()
 { 
   // First, initialize some parameters
   convergenceStrategy_.clear();
@@ -147,15 +150,23 @@ void SubsetSampling::run()
   }
   ++ numberOfSteps_;
 
+  // Stop if the wanted probability if greater than the target probability per step 
+  Bool stop = finalTargetProbability_ >= targetProbability_;
+
+  if  (stop)
+  {
+    setTargetProbability(finalTargetProbability_);
+  }
+
   // computation of the first intermediate threshold with the sample create with a normal distribution */
   NumericalScalar currentThreshold = computeThreshold();
   
-  // as long as the conditional failure domain do not overlap the global one
-  Bool stop = !getEvent().getOperator()( getEvent().getThreshold(), currentThreshold ) || (currentThreshold == getEvent().getThreshold());
-  if ( stop )
-  {
-    currentThreshold = getEvent().getThreshold();
-  }  
+  // // as long as the conditional failure domain do not overlap the global one
+  // Bool stop = !getEvent().getOperator()( getEvent().getThreshold(), currentThreshold ) || (currentThreshold == getEvent().getThreshold());
+  // if ( stop )
+  // {
+  //   currentThreshold = getEvent().getThreshold();
+  // }  
   thresholdPerStep_.add( currentThreshold );
   
   // compute monte carlo probability estimate
@@ -197,26 +208,41 @@ void SubsetSampling::run()
     currentThreshold = computeThreshold();
 
     // update stopping criteria
-    stop = !getEvent().getOperator()( getEvent().getThreshold(), currentThreshold ) || (currentThreshold == getEvent().getThreshold());
-
-    // make sure the last failure domain does not overlap the real failure domain
-    if ( stop )
-    {
-      currentThreshold = getEvent().getThreshold();
-    }  
-    thresholdPerStep_.add( currentThreshold );
+    // stop = !getEvent().getOperator()( getEvent().getThreshold(), currentThreshold ) || (currentThreshold == getEvent().getThreshold());
+    // // make sure the last failure domain does not overlap the real failure domain
+    // if ( stop )
+    // {
+    //   currentThreshold = getEvent().getThreshold();
+    // }  
 
     // compute probability estimate on the current sample and group seeds at the beginning of the work sample
     NumericalScalar currentProbabilityEstimate = computeProbability( probabilityEstimate, currentThreshold );
     
+    // update probability estimate
+    NumericalScalar previousProbabilityEstimate = probabilityEstimate;
+    probabilityEstimate *= currentProbabilityEstimate;
+
+    // update stopping criterion
+    stop = finalTargetProbability_ >= probabilityEstimate;
+
+    if (stop)
+    {
+      // change the target probability of the final step
+      setTargetProbability(finalTargetProbability_ / previousProbabilityEstimate);
+      // compute the final threshold
+      currentThreshold = computeThreshold();
+      // compute the real probability estimate 
+      NumericalScalar currentProbabilityEstimate = computeProbability( previousProbabilityEstimate, currentThreshold );
+      // update probability estimate
+      probabilityEstimate = previousProbabilityEstimate * currentProbabilityEstimate;
+    }
+
     // update coefficient of variation 
     NumericalScalar gamma = computeVarianceGamma( currentProbabilityEstimate, currentThreshold );
     currentCoVsquare = (1.0 - currentProbabilityEstimate) / (currentProbabilityEstimate * currentLevelSample_.getSize() * 1.0);
     coefficientOfVariationSquare += (1.0 + gamma) * currentCoVsquare;
-    
-    // update probability estimate
-    probabilityEstimate *= currentProbabilityEstimate;
 
+    thresholdPerStep_.add( currentThreshold );
     gammaPerStep_.add(gamma);
     probabilityEstimatePerStep_.add(probabilityEstimate);
     coefficientOfVariationPerStep_.add(sqrt(coefficientOfVariationSquare));
@@ -231,7 +257,10 @@ void SubsetSampling::run()
     ++ numberOfSteps_;
   }
 
-  setResult( SubsetSamplingResult(getEvent(), probabilityEstimate, varianceEstimate, numberOfSteps_ * getMaximumOuterSampling(), getBlockSize(), sqrt( coefficientOfVariationSquare )) );
+  //update the event with the final threshold
+  Event modified_event = Event(RandomVector(getEvent().getFunction(), getEvent().getAntecedent()), getEvent().getOperator(), currentThreshold);
+
+  setResult( SubsetInverseSamplingResult(modified_event, probabilityEstimate, varianceEstimate, numberOfSteps_ * getMaximumOuterSampling(), getBlockSize(), sqrt( coefficientOfVariationSquare ), currentThreshold) );
   
   // keep the event sample if requested
   if (keepEventSample_)
@@ -240,7 +269,7 @@ void SubsetSampling::run()
     eventOutputSample_ = NumericalSample (0, getEvent().getFunction().getOutputDimension());
     for ( UnsignedInteger i = 0; i < currentPointSample_.getSize(); ++ i )
     {
-      if ( getEvent().getOperator()( currentLevelSample_[i][0], getEvent().getThreshold() ) )
+      if ( getEvent().getOperator()( currentLevelSample_[i][0], currentThreshold ) )
       {
         eventInputSample_.add( standardEvent_.getAntecedent()->getDistribution().getInverseIsoProbabilisticTransformation()(currentPointSample_[i]) );
         eventOutputSample_.add( currentLevelSample_[i] );
@@ -255,14 +284,14 @@ void SubsetSampling::run()
 
 
 /* Compute the block sample */
-NumericalSample SubsetSampling::computeBlockSample()
+NumericalSample SubsetInverseSampling::computeBlockSample()
 {
   return NumericalSample();
 }
 
 
 /* Compute the new threshold corresponding to the target failure probability */
-NumericalScalar SubsetSampling::computeThreshold()
+NumericalScalar SubsetInverseSampling::computeThreshold()
 {
   // compute the quantile according to the event operator
   NumericalScalar ratio = getEvent().getOperator()(1.0, 2.0) ?  targetProbability_ : 1.0 - targetProbability_;
@@ -273,7 +302,7 @@ NumericalScalar SubsetSampling::computeThreshold()
 }
 
 
-NumericalScalar SubsetSampling::computeProbability(NumericalScalar probabilityEstimateFactor, NumericalScalar threshold)
+NumericalScalar SubsetInverseSampling::computeProbability(NumericalScalar probabilityEstimateFactor, NumericalScalar threshold)
 {
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
   const UnsignedInteger blockSize = getBlockSize();
@@ -317,7 +346,7 @@ NumericalScalar SubsetSampling::computeProbability(NumericalScalar probabilityEs
 
 
 /* Sort new seeds */
-void SubsetSampling::initializeSeed(NumericalScalar threshold)
+void SubsetInverseSampling::initializeSeed(NumericalScalar threshold)
 {
   UnsignedInteger seedIndex = 0;
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
@@ -339,7 +368,7 @@ void SubsetSampling::initializeSeed(NumericalScalar threshold)
 
 
 /* Compute the correlation on markov chains at the current state of the algorithm */
-NumericalScalar SubsetSampling::computeVarianceGamma(NumericalScalar currentFailureProbability, NumericalScalar threshold)
+NumericalScalar SubsetInverseSampling::computeVarianceGamma(NumericalScalar currentFailureProbability, NumericalScalar threshold)
 {
   const UnsignedInteger N = currentPointSample_.getSize();
   const UnsignedInteger Nc = std::max<UnsignedInteger>(1, targetProbability_ * N);
@@ -377,7 +406,7 @@ NumericalScalar SubsetSampling::computeVarianceGamma(NumericalScalar currentFail
 
 
 /* Iterate one step of the algorithm */
-void SubsetSampling::generatePoints(NumericalScalar threshold)
+void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
 {  
   UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
   UnsignedInteger blockSize = getBlockSize();
@@ -434,92 +463,102 @@ void SubsetSampling::generatePoints(NumericalScalar threshold)
 
 
 /* Markov parameter accessor */
-void SubsetSampling::setProposalRange(NumericalScalar proposalRange)
+void SubsetInverseSampling::setProposalRange(NumericalScalar proposalRange)
 {
   proposalRange_ = proposalRange;
 }
 
 
-NumericalScalar SubsetSampling::getProposalRange() const
+NumericalScalar SubsetInverseSampling::getProposalRange() const
 {
   return proposalRange_;
 }
 
 
 /* Ratio accessor */
-void SubsetSampling::setTargetProbability(NumericalScalar targetProbability)
+void SubsetInverseSampling::setTargetProbability(NumericalScalar targetProbability)
 {
   if ( (targetProbability <= 0.) || (targetProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
   targetProbability_ = targetProbability;
 }
 
-
-NumericalScalar SubsetSampling::getTargetProbability() const
+NumericalScalar SubsetInverseSampling::getTargetProbability() const
 {
   return targetProbability_;
 }
 
+/* final target probability accessor */
+void SubsetInverseSampling::setFinalTargetProbability(NumericalScalar finalTargetProbability)
+{
+  if ( (finalTargetProbability <= 0.) || (finalTargetProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
+  finalTargetProbability_ = finalTargetProbability;
+}
 
-UnsignedInteger SubsetSampling::getNumberOfSteps()
+NumericalScalar SubsetInverseSampling::getFinalTargetProbability() const
+{
+  return finalTargetProbability_;
+}
+
+UnsignedInteger SubsetInverseSampling::getNumberOfSteps()
 {
   return numberOfSteps_;
 }
 
 
-NumericalPoint SubsetSampling::getThresholds() const
+NumericalPoint SubsetInverseSampling::getThresholds() const
 {
   return thresholdPerStep_;
 }
 
 
-OT::NumericalPoint SubsetSampling::getGammaPerStep() const
+OT::NumericalPoint SubsetInverseSampling::getGammaPerStep() const
 {
   return gammaPerStep_;
 }
 
 
-OT::NumericalPoint SubsetSampling::getCoefficientOfVariationPerStep() const
+OT::NumericalPoint SubsetInverseSampling::getCoefficientOfVariationPerStep() const
 {
   return coefficientOfVariationPerStep_;
 }
 
 
-OT::NumericalPoint SubsetSampling::getProbabilityEstimatePerStep() const
+OT::NumericalPoint SubsetInverseSampling::getProbabilityEstimatePerStep() const
 {
   return probabilityEstimatePerStep_;
 }
 
 
-OT::NumericalPoint SubsetSampling::getThresholdPerStep() const
+OT::NumericalPoint SubsetInverseSampling::getThresholdPerStep() const
 {
   return thresholdPerStep_;
 }
 
 
-void SubsetSampling::setKeepEventSample(bool keepEventSample)
+void SubsetInverseSampling::setKeepEventSample(bool keepEventSample)
 {
   keepEventSample_ = keepEventSample;
 }
 
 
-NumericalSample SubsetSampling::getEventInputSample() const
+NumericalSample SubsetInverseSampling::getEventInputSample() const
 {
   return eventInputSample_;
 }
 
 
-NumericalSample SubsetSampling::getEventOutputSample() const
+NumericalSample SubsetInverseSampling::getEventOutputSample() const
 {
   return eventOutputSample_;
 }
 
 
-void SubsetSampling::setISubset(OT::Bool iSubset)
+void SubsetInverseSampling::setISubset(OT::Bool iSubset)
 {
   iSubset_ = iSubset;
 }
 
-void SubsetSampling::setBetaMin(NumericalScalar betaMin)
+void SubsetInverseSampling::setBetaMin(NumericalScalar betaMin)
 {
   if (betaMin <= 0.) throw InvalidArgumentException(HERE) << "Beta min should be positive";
   betaMin_ = betaMin;
@@ -529,11 +568,12 @@ void SubsetSampling::setBetaMin(NumericalScalar betaMin)
 
 
 /* String converter */
-String SubsetSampling::__repr__() const
+String SubsetInverseSampling::__repr__() const
 {
   OSS oss;
   oss << "class=" << getClassName()
       << " derived from " << Simulation::__repr__()
+      << " finalTargetProbability=" << finalTargetProbability_
       << " proposalRange=" << proposalRange_
       << " targetProbability=" << targetProbability_
       << " keepEventSample_=" << keepEventSample_;
@@ -542,9 +582,10 @@ String SubsetSampling::__repr__() const
 
 
 /* Method save() stores the object through the StorageManager */
-void SubsetSampling::save(Advocate & adv) const
+void SubsetInverseSampling::save(Advocate & adv) const
 {
   Simulation::save(adv);
+  adv.saveAttribute("finalTargetProbability", finalTargetProbability_);
   adv.saveAttribute("proposalRange_", proposalRange_);
   adv.saveAttribute("targetProbability_", targetProbability_);
   adv.saveAttribute("iSubset_", iSubset_);
@@ -560,9 +601,10 @@ void SubsetSampling::save(Advocate & adv) const
 
 
 /* Method load() reloads the object from the StorageManager */
-void SubsetSampling::load(Advocate & adv)
+void SubsetInverseSampling::load(Advocate & adv)
 {
   Simulation::load(adv);
+  adv.loadAttribute("finalTargetProbability", finalTargetProbability_);
   adv.loadAttribute("proposalRange_", proposalRange_);
   adv.loadAttribute("targetProbability_", targetProbability_);
   adv.loadAttribute("keepEventSample_", keepEventSample_);

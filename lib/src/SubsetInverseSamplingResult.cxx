@@ -18,7 +18,7 @@
  *  along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "otsubsetinverse/SubsetSamplingResult.hxx"
+#include "otsubsetinverse/SubsetInverseSamplingResult.hxx"
 
 using namespace OT;
 
@@ -26,59 +26,61 @@ namespace OTSubsetInverse
 {
 
 /*
- * @class SubsetSamplingResult
+ * @class SubsetInverseSamplingResult
  */
 
-CLASSNAMEINIT(SubsetSamplingResult);
+CLASSNAMEINIT(SubsetInverseSamplingResult);
 
-static Factory<SubsetSamplingResult> Factory_SubsetSamplingResult;
+static Factory<SubsetInverseSamplingResult> Factory_SubsetInverseSamplingResult;
 
 
 /* Default constructor */
-SubsetSamplingResult::SubsetSamplingResult()
+SubsetInverseSamplingResult::SubsetInverseSamplingResult()
 : SimulationResultImplementation()
 {
 }
 
 
 /* Constructor with parameters */
-SubsetSamplingResult::SubsetSamplingResult(const Event & event,
+SubsetInverseSamplingResult::SubsetInverseSamplingResult(const Event & event,
   const NumericalScalar probabilityEstimate,
   const NumericalScalar varianceEstimate,
   const UnsignedInteger outerSampling,
   const UnsignedInteger blockSize,
-  const NumericalScalar coefficientOfVariation)
+  const NumericalScalar coefficientOfVariation,
+  const NumericalScalar threshold)
 : SimulationResultImplementation(event, probabilityEstimate, varianceEstimate, outerSampling, blockSize),
-  coefficientOfVariation_(coefficientOfVariation)
+  coefficientOfVariation_(coefficientOfVariation),
+  threshold_(threshold)
 {
 }
 
 
 /* Virtual constructor */
-SubsetSamplingResult * SubsetSamplingResult::clone() const
+SubsetInverseSamplingResult * SubsetInverseSamplingResult::clone() const
 {
-  return new SubsetSamplingResult(*this);
+  return new SubsetInverseSamplingResult(*this);
 }
 
 
 /* Coefficient of variation estimate accessor */
-NumericalScalar SubsetSamplingResult::getCoefficientOfVariation() const
+NumericalScalar SubsetInverseSamplingResult::getCoefficientOfVariation() const
 {
   return coefficientOfVariation_;
 }
 
-
 /* String converter */
-String SubsetSamplingResult::__repr__() const
+String SubsetInverseSamplingResult::__repr__() const
 {
   OSS oss;
   oss << SimulationResultImplementation::__repr__();
+  oss << " threshold=" << threshold_;
   return oss;
 }
 
 
 /* Method save() stores the object through the StorageManager */
-void SubsetSamplingResult::save(Advocate & adv) const
+void SubsetInverseSamplingResult::save(Advocate & adv) const
 {
   SimulationResultImplementation::save(adv);
   adv.saveAttribute("coefficientOfVariation_", coefficientOfVariation_);
@@ -86,7 +88,7 @@ void SubsetSamplingResult::save(Advocate & adv) const
 
 
 /* Method load() reloads the object from the StorageManager */
-void SubsetSamplingResult::load(Advocate & adv)
+void SubsetInverseSamplingResult::load(Advocate & adv)
 {
   SimulationResultImplementation::load(adv);
   adv.loadAttribute("coefficientOfVariation_", coefficientOfVariation_);

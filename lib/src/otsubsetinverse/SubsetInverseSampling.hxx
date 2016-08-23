@@ -1,6 +1,6 @@
 //                                               -*- C++ -*-
 /**
- *  @brief SubsetSampling
+ *  @brief SubsetInverseSampling
  *
  *  Copyright 2005-2016 Airbus-EDF-IMACS-Phimeca
  *
@@ -18,8 +18,8 @@
  *  along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef OTSUBSETINVERSE_SUBSETSAMPLING_HXX
-#define OTSUBSETINVERSE_SUBSETSAMPLING_HXX
+#ifndef OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX
+#define OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX
 
 // #include <OT.hxx>
 #include <openturns/Simulation.hxx>
@@ -30,7 +30,7 @@ namespace OTSubsetInverse
 {
 
 
-class OTSUBSETINVERSE_API SubsetSampling
+class OTSUBSETINVERSE_API SubsetInverseSampling
 : public OT::Simulation
 {
 CLASSNAME
@@ -43,16 +43,17 @@ public:
   static const OT::NumericalScalar DefaultBetaMin;
 
   /** Default Constructor */
-  SubsetSampling();
+  SubsetInverseSampling();
 
 
   /** Constructor with parameters */
-  SubsetSampling(const OT::Event & event,
+  SubsetInverseSampling(const OT::Event & event,
+                 const OT::NumericalScalar finalTargetProbability,
                  const OT::NumericalScalar proposalRange = DefaultProposalRange,
                  const OT::NumericalScalar targetProbability = DefaultTargetProbability);
 
   /** Virtual constructor */
-  virtual SubsetSampling * clone() const;
+  virtual SubsetInverseSampling * clone() const;
 
   /** The range of the uniform proposal pdf */
   void setProposalRange(OT::NumericalScalar proposalRange);
@@ -61,6 +62,10 @@ public:
   /** Ratio parameter */
   void setTargetProbability(OT::NumericalScalar targetProbability);
   OT::NumericalScalar getTargetProbability() const;
+
+  /** final target probability */
+  void setFinalTargetProbability(OT::NumericalScalar finalTargetProbability);
+  OT::NumericalScalar getFinalTargetProbability() const;
   
   /** Accessor to the achieved number of steps */
   OT::UnsignedInteger getNumberOfSteps();
@@ -122,6 +127,7 @@ private:
   OT::Bool iSubset_;// conditional pre-sampling
   OT::NumericalScalar betaMin_;// pre-sampling hypersphere exclusion radius
   OT::Bool keepEventSample_;// do we keep the event sample ?
+  OT::NumericalScalar finalTargetProbability_;// final wanted target probability
 
   // some results
   OT::UnsignedInteger numberOfSteps_;// number of subset steps
@@ -139,8 +145,8 @@ private:
   OT::NumericalSample currentLevelSample_;//f(X)
 
 
-}; /* class SubsetSampling */
+}; /* class SubsetInverseSampling */
 
 } /* namespace OTSubsetInverse */
 
-#endif /* OTSUBSETINVERSE_SUBSETSAMPLING_HXX */
+#endif /* OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX */

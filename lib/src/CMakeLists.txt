@@ -2,11 +2,11 @@
 
 ot_add_current_dir_to_include_dirs ()
 
-ot_add_source_file ( SubsetSampling.cxx )
-ot_add_source_file ( SubsetSamplingResult.cxx )
+ot_add_source_file ( SubsetInverseSampling.cxx )
+ot_add_source_file ( SubsetInverseSamplingResult.cxx )
 
-ot_install_header_file ( SubsetSampling.hxx )
-ot_install_header_file ( SubsetSamplingResult.hxx )
+ot_install_header_file ( SubsetInverseSampling.hxx )
+ot_install_header_file ( SubsetInverseSamplingResult.hxx )
 
 
 include_directories ( ${INTERNAL_INCLUDE_DIRS} )

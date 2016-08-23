@@ -98,7 +98,7 @@ include_directories ( ${INTERNAL_INCLUDE_DIRS} )
 
 
 
-ot_check_test ( SubsetSampling_std )
+ot_check_test ( SubsetInverseSampling_std )
 
 
 add_custom_target ( cppcheck COMMAND ${CMAKE_CTEST_COMMAND} -R "^cppcheck_"

@@ -18,7 +18,7 @@
 
 // The new classes
 %include otsubsetinverse/OTSubsetInverseprivate.hxx
-%include SubsetSamplingResult.i
-%include SubsetSampling.i
+%include SubsetInverseSamplingResult.i
+%include SubsetInverseSampling.i
 
 
