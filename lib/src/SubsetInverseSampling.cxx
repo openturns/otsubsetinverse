@@ -161,15 +161,7 @@ void SubsetInverseSampling::run()
   }
 
   // computation of the first intermediate threshold with the sample create with a normal distribution */
-  NumericalScalar currentThreshold = computeThreshold();
-  
-  // // as long as the conditional failure domain do not overlap the global one
-  // Bool stop = !getEvent().getOperator()( getEvent().getThreshold(), currentThreshold ) || (currentThreshold == getEvent().getThreshold());
-  // if ( stop )
-  // {
-  //   currentThreshold = getEvent().getThreshold();
-  // }  
-  thresholdPerStep_.add( currentThreshold );
+  NumericalScalar currentThreshold = computeThreshold(); 
   
   // compute monte carlo probability estimate
   NumericalScalar probabilityEstimate = computeProbability(1.0, currentThreshold);
@@ -179,7 +171,6 @@ void SubsetInverseSampling::run()
     NumericalScalar correction = 1.0 - ChiSquare(standardEvent_.getImplementation()->getAntecedent()->getDistribution().getDimension()).computeCDF(betaMin_ * betaMin_);
     probabilityEstimate *= correction;
   }
-  
 
   // if there is no subset step ...
   if ( stop )
@@ -193,12 +184,11 @@ void SubsetInverseSampling::run()
     }
   }
   
+  thresholdPerStep_.add( currentThreshold );
   gammaPerStep_.add(0.);
   probabilityEstimatePerStep_.add(probabilityEstimate);
   coefficientOfVariationPerStep_.add(coefficientOfVariationSquare);
   
-  NumericalScalar previousProbabilityEstimate(0);
-
   // as long as the conditional failure domain do not overlap the global one
   while ( !stop )
   {    
@@ -213,14 +203,6 @@ void SubsetInverseSampling::run()
 
     // compute new threshold
     currentThreshold = computeThreshold();
-
-    // update stopping criteria
-    // stop = !getEvent().getOperator()( getEvent().getThreshold(), currentThreshold ) || (currentThreshold == getEvent().getThreshold());
-    // // make sure the last failure domain does not overlap the real failure domain
-    // if ( stop )
-    // {
-    //   currentThreshold = getEvent().getThreshold();
-    // }  
 
     // compute probability estimate on the current sample and group seeds at the beginning of the work sample
     NumericalScalar currentProbabilityEstimate = computeProbability( probabilityEstimate, currentThreshold );
@@ -237,7 +219,7 @@ void SubsetInverseSampling::run()
       setTargetProbability(finalTargetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1]);
       // compute the final threshold
       currentThreshold = computeThreshold();
-      // compute the real probability estimate 
+      // compute the current probability estimate 
       NumericalScalar currentProbabilityEstimate = computeProbability( probabilityEstimatePerStep_[numberOfSteps_-1], currentThreshold );
       // update probability estimate
       probabilityEstimate = probabilityEstimatePerStep_[numberOfSteps_-1] * currentProbabilityEstimate;
@@ -264,8 +246,8 @@ void SubsetInverseSampling::run()
   }
 
   // compute the threshold distribution
-  // sample the asymptotic pf distribution
-  // Truncated to avoid negative probability distribution when imprecise simulation
+  // sampling of the asymptotic pf distribution
+  // Truncated distribution to avoid negative probability realizations when imprecise simulation
   Distribution probabilityDistribution = TruncatedDistribution(Normal(probabilityEstimate, sqrt(varianceEstimate)), 0, TruncatedDistribution::LOWER);
   NumericalScalar sizeSample = 10000;
   NumericalSample sampleProbDistribution = probabilityDistribution.getSample(sizeSample);
@@ -276,6 +258,7 @@ void SubsetInverseSampling::run()
     currentLevelSample_ = allLevelSample[numberOfSteps_ - 1];
     NumericalScalar newTargetProbability(sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_-2]);
     // change the step when the probability is greater than the previous probability estimate step
+    // use the previous step data
     NumericalScalar stepBackward(1);
     while (newTargetProbability >= 1)
     { 
