@@ -106,6 +106,7 @@ Variance_PF_SS = ResultSS.getVarianceEstimate()
 length90SS = ResultSS.getConfidenceLength(0.90)
 N_SS = ResultSS.getOuterSampling()*ResultSS.getBlockSize()
 thresholdSS = mySS.getThresholdPerStep()[-1]
+thLengthSS = mySS.getThresholdConfidenceLength(0.90)
 
 #########################################################################################################
 
@@ -131,6 +132,7 @@ print("CoV = %.5f" % CVSS)
 print("90% Confidence Interval =", "%.5e" % length90SS)
 print("CI at 90% =[", "%.5e" % (PFSS-0.5*length90SS) , "; %.5e" % (PFSS+0.5*length90SS) , "]")
 print("Threshold = %.5e" % thresholdSS)
+print("CI threshold at 90% =[", "%.5e" % (thresholdSS-0.5*thLengthSS) , "; %.5e" % (thresholdSS+0.5*thLengthSS) , "]")
 print("Limit state calls =", N_SS)
 print("************************************************************************************************")
 print("")

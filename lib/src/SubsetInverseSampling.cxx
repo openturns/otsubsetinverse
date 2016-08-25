@@ -90,7 +90,8 @@ void SubsetInverseSampling::run()
   probabilityEstimatePerStep_.clear();
   eventInputSample_.clear();
   eventOutputSample_.clear();
-  
+  Collection<NumericalSample> allLevelSample;
+
   dimension_ = getEvent().getAntecedent()->getDimension();
 
   if ( getMaximumCoefficientOfVariation() != ResourceMap::GetAsNumericalScalar( "Simulation-DefaultMaximumCoefficientOfVariation" ) )
@@ -115,6 +116,7 @@ void SubsetInverseSampling::run()
   const UnsignedInteger N = maximumOuterSampling * blockSize;
   currentPointSample_ = NumericalSample( N, dimension_ );
   currentLevelSample_ = NumericalSample( N, getEvent().getFunction().getOutputDimension() );
+  allLevelSample.add(currentLevelSample_);
   
   // Step 1: sampling
   for ( UnsignedInteger i = 0; i < maximumOuterSampling; ++ i )
@@ -195,6 +197,8 @@ void SubsetInverseSampling::run()
   probabilityEstimatePerStep_.add(probabilityEstimate);
   coefficientOfVariationPerStep_.add(coefficientOfVariationSquare);
   
+  NumericalScalar previousProbabilityEstimate(0);
+
   // as long as the conditional failure domain do not overlap the global one
   while ( !stop )
   {    
@@ -203,6 +207,9 @@ void SubsetInverseSampling::run()
 
     // create new points using MCMC
     generatePoints( currentThreshold );
+
+    // save the level sample
+    allLevelSample.add(currentLevelSample_);
 
     // compute new threshold
     currentThreshold = computeThreshold();
@@ -219,7 +226,6 @@ void SubsetInverseSampling::run()
     NumericalScalar currentProbabilityEstimate = computeProbability( probabilityEstimate, currentThreshold );
     
     // update probability estimate
-    NumericalScalar previousProbabilityEstimate = probabilityEstimate;
     probabilityEstimate *= currentProbabilityEstimate;
 
     // update stopping criterion
@@ -228,13 +234,13 @@ void SubsetInverseSampling::run()
     if (stop)
     {
       // change the target probability of the final step
-      setTargetProbability(finalTargetProbability_ / previousProbabilityEstimate);
+      setTargetProbability(finalTargetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1]);
       // compute the final threshold
       currentThreshold = computeThreshold();
       // compute the real probability estimate 
-      NumericalScalar currentProbabilityEstimate = computeProbability( previousProbabilityEstimate, currentThreshold );
+      NumericalScalar currentProbabilityEstimate = computeProbability( probabilityEstimatePerStep_[numberOfSteps_-1], currentThreshold );
       // update probability estimate
-      probabilityEstimate = previousProbabilityEstimate * currentProbabilityEstimate;
+      probabilityEstimate = probabilityEstimatePerStep_[numberOfSteps_-1] * currentProbabilityEstimate;
     }
 
     // update coefficient of variation 
@@ -258,13 +264,26 @@ void SubsetInverseSampling::run()
   }
 
   // compute the threshold distribution
-  Distribution probabilityDistribution = Normal(probabilityEstimate, sqrt(varianceEstimate));
+  // sample the asymptotic pf distribution
+  // Truncated to avoid negative probability distribution when imprecise simulation
+  Distribution probabilityDistribution = TruncatedDistribution(Normal(probabilityEstimate, sqrt(varianceEstimate)), 0, TruncatedDistribution::LOWER);
   NumericalScalar sizeSample = 10000;
   NumericalSample sampleProbDistribution = probabilityDistribution.getSample(sizeSample);
   sampleThreshold_ = NumericalSample(sizeSample, 1);
+  // compute the corresponding threshold for each probability
   for ( UnsignedInteger i = 0; i < sizeSample; ++ i )
   { 
-    setTargetProbability(sampleProbDistribution[i][0]);
+    currentLevelSample_ = allLevelSample[numberOfSteps_ - 1];
+    NumericalScalar newTargetProbability(sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_-2]);
+    // change the step when the probability is greater than the previous probability estimate step
+    NumericalScalar stepBackward(1);
+    while (newTargetProbability >= 1)
+    { 
+      newTargetProbability = sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_ - 2 - stepBackward];
+      currentLevelSample_ = allLevelSample[numberOfSteps_ - 1 - stepBackward];
+      stepBackward ++;
+    }
+    setTargetProbability(newTargetProbability);
     NumericalPoint threshold(1, computeThreshold());
     sampleThreshold_[i] = threshold;
   }
@@ -473,13 +492,13 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
   }
 }
 
-NumericalSample SubsetInverseSampling::getSampleThreshold() const
+NumericalSample SubsetInverseSampling::getThresholdSample() const
 {
   return sampleThreshold_;
 }
 
 /* Confidence Length of the threshold */
-NumericalScalar SubsetInverseSampling::computeThresholdConfidenceLength(const NumericalScalar level) const
+NumericalScalar SubsetInverseSampling::getThresholdConfidenceLength(const NumericalScalar level) const
 {
   NumericalScalar thresholdInf = sampleThreshold_.computeQuantile((1 - level)/2)[0];
   NumericalScalar thresholdSup = sampleThreshold_.computeQuantile(level/2)[0];

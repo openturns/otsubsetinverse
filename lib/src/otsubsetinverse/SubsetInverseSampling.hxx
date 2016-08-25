@@ -70,8 +70,8 @@ public:
   /** Accessor to the achieved number of steps */
   OT::UnsignedInteger getNumberOfSteps();
 
-  OT::NumericalScalar computeThresholdConfidenceLength(OT::NumericalScalar level) const;
-  OT::NumericalSample getSampleThreshold() const;
+  OT::NumericalScalar getThresholdConfidenceLength(OT::NumericalScalar level) const;
+  OT::NumericalSample getThresholdSample() const;
     
   /** Stepwise result accessors */
   OT::NumericalPoint getThresholdPerStep() const;
