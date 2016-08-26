@@ -268,7 +268,6 @@ range : float
 
 Returns
 -------
-// range : float
-//     Range length."
-// 
-// 
+range : float
+    Range length."
+
