@@ -271,3 +271,23 @@ Returns
 range : float
     Range length."
 
+// ---------------------------------------------------------------------------
+
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::setBetaMin
+"Radius of the hypershere accessor.
+
+Parameters
+----------
+beta : float
+    Radius value of the exclusion hypershere when the conditional simulation is activated."
+
+// ---------------------------------------------------------------------------
+
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::setISubset
+"Conditonal simulation activation accessor.
+
+Parameters
+----------
+isubset : bool
+    Activate or not the conditional simulation for the first step of the 
+    simulation."
