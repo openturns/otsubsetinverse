@@ -8,4 +8,4 @@ The goal of this part is to expose the design principles that govern the platfor
    :maxdepth: 2
 
    architecture/architecture
-   validation/validation
+

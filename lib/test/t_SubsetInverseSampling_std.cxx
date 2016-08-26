@@ -1,5 +1,5 @@
 #include <iostream>
-#include <openturns/OT.hxx>
+#include <OT.hxx>
 #include "otsubsetinverse/SubsetInverseSampling.hxx"
 
 using namespace OT;

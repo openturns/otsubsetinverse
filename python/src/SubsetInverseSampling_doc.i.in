@@ -4,33 +4,36 @@
 Parameters
 ----------
 event : :class:`~openturns.Event`
-    Event we are computing the probability of.
+    Event we are computing the probability of. The threshold of the event is
+    not used.
+targetProbability : float
+    The wanted final probability.
 proposalRange : float, optional
     Proposal range length
-targetProbability : float, optional
+conditionalProbability : float, optional
     Value of :math:`P(F_i|F_{i-1})` between successive steps
 
 Notes
 -----
-The goal is to estimate the following probability
+The goal is to estimate the threshold of the following target probability :
 
 .. math::
 
     P_f = \int_{\mathcal D_f} f_{\uX}(\ux)\di{\ux}\\
         = \int_{\mathbb R^{n_X}} \mathbf{1}_{\{g(\ux,\underline{d}) \:\leq 0\: \}}f_{\uX}(\ux)\di{\ux}\\
-        = \Prob {\{g(\uX,\underline{d}) \leq 0\}}
+        = \Prob {\{g(\uX,\underline{d}) \leq q\}}
 
 
-The idea of the subset simulation method [Au2001]_ is to replace simulating a
+The idea of the subset simulation method is to replace simulating a
 rare failure event in the original probability space by a sequence of
-simulations of more frequent conditional events :math:`F_i`
+simulations of more frequent conditional events :math:`F_i` :
 
 .. math::
 
     F_1 \supset F_2 \supset \dots \supset F_m = F
 
 
-The original probability estimate rewrites
+The original probability estimate rewrites :
 
 .. math::
 
@@ -39,7 +42,7 @@ The original probability estimate rewrites
 
 And each conditional subset failure region is chosen by setting the threshold
 :math:`g_i` so that :math:`P(F_i|F_{i-1})` leads to a conditional failure
-probability of order :math:`0.1`
+probability of order :math:`0.1` :
 
 .. math::
 
@@ -61,9 +64,49 @@ autocorrelation between Markov chain samples.
 The first event :math:`F_1` not being conditional, :math:`\delta^2_1`
 expresses as the classic Monte Carlo c.o.v.
 
+Examples
+--------
+>>> import openturns as ot
+>>> import otsubsetinverse as otsi
+
+>>> ot.RandomGenerator.SetSeed(0)
+
+Create a performance function with an associated distribution.
+
+>>> limitState = ot.NumericalMathFunction(['u1', 'u2'], ['g'], ['u1-u2'])
+>>> dim = limitState.getInputDimension()
+>>> mean = ot.NumericalPoint([7., 2.])
+>>> sigma = ot.NumericalPoint(dim, 1.0)
+>>> R = ot.IdentityMatrix(dim)
+>>> myDistribution = ot.Normal(mean, sigma, R)
+>>> vect = ot.RandomVector(myDistribution)
+>>> output = ot.RandomVector(limitState, vect)
+
+Create an event with a fictional threshold value which will not be used.
+
+>>> myEvent = ot.Event(output, ot.Less(), 0.)
+
+Define the target probability for which the threshold will be computed.
+
+>>> targetProbability = 0.0002
+>>> mySS = otsi.SubsetInverseSampling(myEvent, targetProbability)
+>>> mySS.setMaximumOuterSampling(10000)
+>>> mySS.run()
+
+Get some results.
+
+>>> ResultSS = mySS.getResult()
+>>> print('Pf = {}'.format(ResultSS.getProbabilityEstimate()))
+Pf = 0.0002
+>>> print('Threshold = {}'.format(mySS.getThresholdPerStep()[-1]))
+Threshold = 0.0202715501987
+>>> print('Threshold confidence length = {}'.format(
+...                         mySS.getThresholdConfidenceLength(0.90)))
+Threshold confidence length = 0.0397951893748
+
 See also
 --------
-Simulation"
+openturns.Simulation"
 
 // ---------------------------------------------------------------------------
 
@@ -77,7 +120,7 @@ coef : `~openturns.NumericalPoint`
 
 // ---------------------------------------------------------------------------
 
-%feature("docstring") OTSubsetInverse::SubsetInverseSampling::setTargetProbability
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::setConditionalProbability
 "Conditional probability accessor.
 
 Value of :math:`P(F_i|F_{i-1})` between successive steps.
@@ -89,7 +132,7 @@ prob : float
 
 // ---------------------------------------------------------------------------
 
-%feature("docstring") OTSubsetInverse::SubsetInverseSampling::getTargetProbability
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::getConditionalProbability
 "Conditional probability accessor.
 
 Value of :math:`P(F_i|F_{i-1})` between successive steps.
@@ -101,7 +144,7 @@ prob : float
 
 // ---------------------------------------------------------------------------
 
-%feature("docstring") OTSubsetInverse::SubsetInverseSampling::setFinalTargetProbability
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::setTargetProbability
 "Final target probability accessor.
 
 Value of :math:`P(F_m)`.
@@ -113,7 +156,22 @@ prob : float
 
 // ---------------------------------------------------------------------------
 
-%feature("docstring") OTSubsetInverse::SubsetInverseSampling::getFinalTargetProbability
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::getThresholdConfidenceLength
+"Accessor to the confidence length of the threshold.
+
+Parameters
+----------
+level : float, :math:`level \in ]0, 1[`
+    Confidence level. By default, it is :math:`0.95`.
+
+Returns
+-------
+confidenceLength : float
+    Length of the confidence interval at the confidence level *level*."
+
+// ---------------------------------------------------------------------------
+
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::getTargetProbability
 "Final target probability accessor.
 
 Value of :math:`P(F_m)`.
@@ -210,6 +268,7 @@ range : float
 
 Returns
 -------
-range : float
-    Range length."
-
+// range : float
+//     Range length."
+// 
+// 

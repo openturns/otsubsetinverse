@@ -31,7 +31,7 @@ CLASSNAMEINIT(SubsetInverseSampling);
 static Factory<SubsetInverseSampling> Factory_SubsetInverseSampling;
 
 const UnsignedInteger SubsetInverseSampling::DefaultMaximumOuterSampling = 10000;
-const NumericalScalar SubsetInverseSampling::DefaultTargetProbability = 0.1;
+const NumericalScalar SubsetInverseSampling::DefaultConditionalProbability = 0.1;
 const NumericalScalar SubsetInverseSampling::DefaultProposalRange = 2.0;
 const NumericalScalar SubsetInverseSampling::DefaultBetaMin = 2.0;
 
@@ -40,29 +40,29 @@ const NumericalScalar SubsetInverseSampling::DefaultBetaMin = 2.0;
 SubsetInverseSampling::SubsetInverseSampling()
 : Simulation()
 , proposalRange_(0.)
-, targetProbability_(0.)
+, conditionalProbability_(0.)
 , iSubset_(false)
 , betaMin_(0.)
 , keepEventSample_(false)
 , numberOfSteps_(0)
-, finalTargetProbability_(0.)
+, targetProbability_(0.)
 {
 }
 
 
 /* Constructor with parameters */
 SubsetInverseSampling::SubsetInverseSampling(const Event & event,
-                               const NumericalScalar finalTargetProbability,
+                               const NumericalScalar targetProbability,
                                const NumericalScalar proposalRange,
-                               const NumericalScalar targetProbability)
+                               const NumericalScalar conditionalProbability)
 : Simulation(event)
 , proposalRange_(proposalRange)
-, targetProbability_(targetProbability)
+, conditionalProbability_(conditionalProbability)
 , iSubset_(false)
 , betaMin_(DefaultBetaMin)
 , keepEventSample_(false)
 , numberOfSteps_(0)
-, finalTargetProbability_(finalTargetProbability)
+, targetProbability_(targetProbability)
 {
   setMaximumOuterSampling( DefaultMaximumOuterSampling );// overide simulation default outersampling
   UnsignedInteger outputDimension = event.getFunction().getOutputDimension();
@@ -97,8 +97,8 @@ void SubsetInverseSampling::run()
   if ( getMaximumCoefficientOfVariation() != ResourceMap::GetAsNumericalScalar( "Simulation-DefaultMaximumCoefficientOfVariation" ) )
     Log::Warn(OSS() << "The maximum coefficient of variation was set. It won't be used as termination criteria.");
 
-  if ( targetProbability_ * getMaximumOuterSampling() < 1 )
-    throw InvalidArgumentException(HERE) << "maximumOuterSampling (" << getMaximumOuterSampling() << ") should be >= " << ceil( 1.0 / targetProbability_ );
+  if ( conditionalProbability_ * getMaximumOuterSampling() < 1 )
+    throw InvalidArgumentException(HERE) << "maximumOuterSampling (" << getMaximumOuterSampling() << ") should be >= " << ceil( 1.0 / conditionalProbability_ );
   
   if ( getMaximumOuterSampling() * getBlockSize() <= 100 )
     Log::Warn(OSS() << "The number of samples per step is very low : " << getMaximumOuterSampling()*getBlockSize() << ".");
@@ -153,11 +153,11 @@ void SubsetInverseSampling::run()
   ++ numberOfSteps_;
 
   // Stop if the wanted probability if greater than the target probability per step 
-  Bool stop = finalTargetProbability_ >= targetProbability_;
+  Bool stop = targetProbability_ >= conditionalProbability_;
 
   if  (stop)
   {
-    setTargetProbability(finalTargetProbability_);
+    setConditionalProbability(targetProbability_);
   }
 
   // computation of the first intermediate threshold with the sample create with a normal distribution */
@@ -211,12 +211,12 @@ void SubsetInverseSampling::run()
     probabilityEstimate *= currentProbabilityEstimate;
 
     // update stopping criterion
-    stop = finalTargetProbability_ >= probabilityEstimate;
+    stop = targetProbability_ >= probabilityEstimate;
 
     if (stop)
     {
       // change the target probability of the final step
-      setTargetProbability(finalTargetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1]);
+      setConditionalProbability(targetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1]);
       // compute the final threshold
       currentThreshold = computeThreshold();
       // compute the current probability estimate 
@@ -256,17 +256,17 @@ void SubsetInverseSampling::run()
   for ( UnsignedInteger i = 0; i < sizeSample; ++ i )
   { 
     currentLevelSample_ = allLevelSample[numberOfSteps_ - 1];
-    NumericalScalar newTargetProbability(sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_-2]);
+    NumericalScalar newConditionalProbability(sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_-2]);
     // change the step when the probability is greater than the previous probability estimate step
     // use the previous step data
     NumericalScalar stepBackward(1);
-    while (newTargetProbability >= 1)
+    while (newConditionalProbability >= 1)
     { 
-      newTargetProbability = sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_ - 2 - stepBackward];
+      newConditionalProbability = sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_ - 2 - stepBackward];
       currentLevelSample_ = allLevelSample[numberOfSteps_ - 1 - stepBackward];
       stepBackward ++;
     }
-    setTargetProbability(newTargetProbability);
+    setConditionalProbability(newConditionalProbability);
     NumericalPoint threshold(1, computeThreshold());
     sampleThreshold_[i] = threshold;
   }
@@ -308,7 +308,7 @@ NumericalSample SubsetInverseSampling::computeBlockSample()
 NumericalScalar SubsetInverseSampling::computeThreshold()
 {
   // compute the quantile according to the event operator
-  NumericalScalar ratio = getEvent().getOperator()(1.0, 2.0) ?  targetProbability_ : 1.0 - targetProbability_;
+  NumericalScalar ratio = getEvent().getOperator()(1.0, 2.0) ?  conditionalProbability_ : 1.0 - conditionalProbability_;
   
   NumericalScalar currentThreshold = currentLevelSample_.computeQuantile( ratio )[0];
   
@@ -385,7 +385,7 @@ void SubsetInverseSampling::initializeSeed(NumericalScalar threshold)
 NumericalScalar SubsetInverseSampling::computeVarianceGamma(NumericalScalar currentFailureProbability, NumericalScalar threshold)
 {
   const UnsignedInteger N = currentPointSample_.getSize();
-  const UnsignedInteger Nc = std::max<UnsignedInteger>(1, targetProbability_ * N);
+  const UnsignedInteger Nc = std::max<UnsignedInteger>(1, conditionalProbability_ * N);
   Matrix IndicatorMatrice( Nc, N / Nc );
   NumericalPoint correlationSequence( N / Nc - 1 );
   NumericalScalar currentFailureProbability2 = pow( currentFailureProbability, 2. );
@@ -426,7 +426,7 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
   UnsignedInteger blockSize = getBlockSize();
   Distribution randomWalk(ComposedDistribution(ComposedDistribution::DistributionCollection(dimension_, Uniform(-0.5*proposalRange_, 0.5*proposalRange_))));
   UnsignedInteger N = currentPointSample_.getSize(); // total sample size
-  UnsignedInteger Nc = targetProbability_ * N; //number of seeds (also = maximumOuterSampling*blockSize)
+  UnsignedInteger Nc = conditionalProbability_ * N; //number of seeds (also = maximumOuterSampling*blockSize)
   
   for ( UnsignedInteger i = 0; i < maximumOuterSampling; ++ i )
   {    
@@ -475,10 +475,6 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
   }
 }
 
-NumericalSample SubsetInverseSampling::getThresholdSample() const
-{
-  return sampleThreshold_;
-}
 
 /* Confidence Length of the threshold */
 NumericalScalar SubsetInverseSampling::getThresholdConfidenceLength(const NumericalScalar level) const
@@ -503,6 +499,18 @@ NumericalScalar SubsetInverseSampling::getProposalRange() const
 
 
 /* Ratio accessor */
+void SubsetInverseSampling::setConditionalProbability(NumericalScalar conditionalProbability)
+{
+  if ( (conditionalProbability <= 0.) || (conditionalProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
+  conditionalProbability_ = conditionalProbability;
+}
+
+NumericalScalar SubsetInverseSampling::getConditionalProbability() const
+{
+  return conditionalProbability_;
+}
+
+/* target probability accessor */
 void SubsetInverseSampling::setTargetProbability(NumericalScalar targetProbability)
 {
   if ( (targetProbability <= 0.) || (targetProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
@@ -512,18 +520,6 @@ void SubsetInverseSampling::setTargetProbability(NumericalScalar targetProbabili
 NumericalScalar SubsetInverseSampling::getTargetProbability() const
 {
   return targetProbability_;
-}
-
-/* final target probability accessor */
-void SubsetInverseSampling::setFinalTargetProbability(NumericalScalar finalTargetProbability)
-{
-  if ( (finalTargetProbability <= 0.) || (finalTargetProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
-  finalTargetProbability_ = finalTargetProbability;
-}
-
-NumericalScalar SubsetInverseSampling::getFinalTargetProbability() const
-{
-  return finalTargetProbability_;
 }
 
 UnsignedInteger SubsetInverseSampling::getNumberOfSteps()
@@ -594,9 +590,9 @@ String SubsetInverseSampling::__repr__() const
   OSS oss;
   oss << "class=" << getClassName()
       << " derived from " << Simulation::__repr__()
-      << " finalTargetProbability=" << finalTargetProbability_
-      << " proposalRange=" << proposalRange_
       << " targetProbability=" << targetProbability_
+      << " proposalRange=" << proposalRange_
+      << " conditionalProbability=" << conditionalProbability_
       << " keepEventSample_=" << keepEventSample_;
   return oss;
 }
@@ -606,9 +602,9 @@ String SubsetInverseSampling::__repr__() const
 void SubsetInverseSampling::save(Advocate & adv) const
 {
   Simulation::save(adv);
-  adv.saveAttribute("finalTargetProbability", finalTargetProbability_);
+  adv.saveAttribute("targetProbability", targetProbability_);
   adv.saveAttribute("proposalRange_", proposalRange_);
-  adv.saveAttribute("targetProbability_", targetProbability_);
+  adv.saveAttribute("conditionalProbability_", conditionalProbability_);
   adv.saveAttribute("iSubset_", iSubset_);
   adv.saveAttribute("betaMin_", betaMin_);
   adv.saveAttribute("keepEventSample_", keepEventSample_);  
@@ -625,9 +621,9 @@ void SubsetInverseSampling::save(Advocate & adv) const
 void SubsetInverseSampling::load(Advocate & adv)
 {
   Simulation::load(adv);
-  adv.loadAttribute("finalTargetProbability", finalTargetProbability_);
+  adv.loadAttribute("targetProbability", targetProbability_);
   adv.loadAttribute("proposalRange_", proposalRange_);
-  adv.loadAttribute("targetProbability_", targetProbability_);
+  adv.loadAttribute("conditionalProbability_", conditionalProbability_);
   adv.loadAttribute("keepEventSample_", keepEventSample_);
   adv.loadAttribute("iSubset_", iSubset_);
   adv.loadAttribute("betaMin_", betaMin_);

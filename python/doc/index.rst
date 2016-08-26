@@ -1,11 +1,11 @@
-OTTemplate documentation
-========================
+OTSubsetInverse documentation
+=============================
 
 User documentation
 ------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    user_manual/user_manual
    examples/examples
@@ -19,9 +19,8 @@ Developer guide
    developer_guide/developer_guide   
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 

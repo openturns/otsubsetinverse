@@ -22,8 +22,8 @@
 #define OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX
 
 // #include <OT.hxx>
-#include <openturns/Simulation.hxx>
-#include <openturns/StandardEvent.hxx>
+#include <Simulation.hxx>
+#include <StandardEvent.hxx>
 #include "otsubsetinverse/OTSubsetInverseprivate.hxx"
 
 namespace OTSubsetInverse
@@ -39,7 +39,7 @@ public:
   /** Default Parameters */
   static const OT::UnsignedInteger DefaultMaximumOuterSampling;
   static const OT::NumericalScalar DefaultProposalRange;
-  static const OT::NumericalScalar DefaultTargetProbability;
+  static const OT::NumericalScalar DefaultConditionalProbability;
   static const OT::NumericalScalar DefaultBetaMin;
 
   /** Default Constructor */
@@ -48,9 +48,9 @@ public:
 
   /** Constructor with parameters */
   SubsetInverseSampling(const OT::Event & event,
-                 const OT::NumericalScalar finalTargetProbability,
+                 const OT::NumericalScalar targetProbability,
                  const OT::NumericalScalar proposalRange = DefaultProposalRange,
-                 const OT::NumericalScalar targetProbability = DefaultTargetProbability);
+                 const OT::NumericalScalar conditionalProbability = DefaultConditionalProbability);
 
   /** Virtual constructor */
   virtual SubsetInverseSampling * clone() const;
@@ -60,18 +60,17 @@ public:
   OT::NumericalScalar getProposalRange() const;
 
   /** Ratio parameter */
-  void setTargetProbability(OT::NumericalScalar targetProbability);
-  OT::NumericalScalar getTargetProbability() const;
+  void setConditionalProbability(OT::NumericalScalar conditionalProbability);
+  OT::NumericalScalar getConditionalProbability() const;
 
   /** final target probability */
-  void setFinalTargetProbability(OT::NumericalScalar finalTargetProbability);
-  OT::NumericalScalar getFinalTargetProbability() const;
+  void setTargetProbability(OT::NumericalScalar targetProbability);
+  OT::NumericalScalar getTargetProbability() const;
   
   /** Accessor to the achieved number of steps */
   OT::UnsignedInteger getNumberOfSteps();
 
-  OT::NumericalScalar getThresholdConfidenceLength(OT::NumericalScalar level) const;
-  OT::NumericalSample getThresholdSample() const;
+  OT::NumericalScalar getThresholdConfidenceLength(const OT::NumericalScalar level = OT::ResourceMap::GetAsNumericalScalar( "SimulationResultImplementation-DefaultConfidenceLevel" )) const;
     
   /** Stepwise result accessors */
   OT::NumericalPoint getThresholdPerStep() const;
@@ -106,7 +105,7 @@ private:
   /** Compute the block sample */
   OT::NumericalSample computeBlockSample();
 
-  /** Compute the new threshold corresponding to the target failure probability */
+  /** Compute the new threshold corresponding to the conditional failure probability */
   OT::NumericalScalar computeThreshold();
 
   /** compute probability estimate on the current sample */
@@ -123,11 +122,11 @@ private:
 
   // some parameters
   OT::NumericalScalar proposalRange_;// width of the proposal pdf
-  OT::NumericalScalar targetProbability_;// target probability at each subset
+  OT::NumericalScalar conditionalProbability_;// conditional probability at each subset
   OT::Bool iSubset_;// conditional pre-sampling
   OT::NumericalScalar betaMin_;// pre-sampling hypersphere exclusion radius
   OT::Bool keepEventSample_;// do we keep the event sample ?
-  OT::NumericalScalar finalTargetProbability_;// final wanted target probability
+  OT::NumericalScalar targetProbability_;// final target probability
   OT::NumericalSample sampleThreshold_;// sample of the threshold distribution
 
   // some results

@@ -3,8 +3,8 @@
 %module(docstring="otsubsetinverse module") otsubsetinverse
 
 %{
-#include <openturns/OT.hxx>
-#include <openturns/PythonWrappingFunctions.hxx>
+#include <OT.hxx>
+#include <PythonWrappingFunctions.hxx>
 %}
 
 // Prerequisites needed
