@@ -1,0 +1,34 @@
+package:
+  name: otsubsetinverse
+  version: 1.0
+
+source:
+  path: ../
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - toolchain
+    - python
+    - cmake  # [not win]
+    - swig  # [not win]
+    - openturns 1.7  # [not win]
+
+  run:
+    - python
+    - openturns
+
+test:
+  imports:
+    - otsubsetinverse
+
+about:
+  home: http://openturns.org/
+  license: LGPLv3
+  summary: Subset inverse simulation
+
+extra:
+  maintainers:
+   - adumas
