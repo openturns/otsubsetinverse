@@ -21,7 +21,7 @@
 #ifndef OTSUBSETINVERSE_SUBSETINVERSESAMPLINGRESULT_HXX
 #define OTSUBSETINVERSE_SUBSETINVERSESAMPLINGRESULT_HXX
 
-#include <OT.hxx>
+#include <openturns/OT.hxx>
 #include "otsubsetinverse/OTSubsetInverseprivate.hxx"
 
 namespace OTSubsetInverse

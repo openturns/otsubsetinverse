@@ -22,8 +22,8 @@
 #define OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX
 
 // #include <OT.hxx>
-#include <Simulation.hxx>
-#include <StandardEvent.hxx>
+#include <openturns/Simulation.hxx>
+#include <openturns/StandardEvent.hxx>
 #include "otsubsetinverse/OTSubsetInverseprivate.hxx"
 
 namespace OTSubsetInverse
