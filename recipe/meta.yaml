@@ -14,7 +14,7 @@ requirements:
     - python
     - cmake  # [not win]
     - swig  # [not win]
-    - openturns 1.8  # [not win]
+    - openturns 1.8rc1  # [not win]
 
   run:
     - python
