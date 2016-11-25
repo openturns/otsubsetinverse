@@ -109,6 +109,7 @@ void SubsetInverseSampling::run()
   NumericalScalar currentCoVsquare = 0.0;
   NumericalScalar varianceEstimate = 0.0;
   NumericalScalar coefficientOfVariationSquare = 0.0;
+  NumericalScalar finalConditionalProbability = 0.0;
 
   // allocate input/output samples
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
@@ -213,7 +214,7 @@ void SubsetInverseSampling::run()
     if (stop)
     {
       // change the target probability of the final step
-      NumericalScalar finalConditionalProbability = targetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1];
+      finalConditionalProbability = targetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1];
       setConditionalProbability(finalConditionalProbability);
       // compute the final threshold
       currentThreshold = computeThreshold();
