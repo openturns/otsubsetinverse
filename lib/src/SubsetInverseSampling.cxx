@@ -109,6 +109,7 @@ void SubsetInverseSampling::run()
   NumericalScalar currentCoVsquare = 0.0;
   NumericalScalar varianceEstimate = 0.0;
   NumericalScalar coefficientOfVariationSquare = 0.0;
+  NumericalScalar finalConditionalProbability = 0.0;
 
   // allocate input/output samples
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
@@ -172,22 +173,18 @@ void SubsetInverseSampling::run()
     probabilityEstimate *= correction;
   }
 
-  // if there is no subset step ...
-  if ( stop )
+  if (probabilityEstimate > 0.0)
   {
-    if (probabilityEstimate > 0.0)
-    {
-      // ... compute coefficient of variation
-      coefficientOfVariationSquare = (1.0 - probabilityEstimate) / (probabilityEstimate * currentLevelSample_.getSize() * 1.0);
-      // ... compute variance estimate
-      varianceEstimate = coefficientOfVariationSquare * probabilityEstimate * probabilityEstimate;
-    }
+    // ... compute coefficient of variation
+    coefficientOfVariationSquare = (1.0 - probabilityEstimate) / (probabilityEstimate * currentLevelSample_.getSize() * 1.0);
+    // ... compute variance estimate
+    varianceEstimate = coefficientOfVariationSquare * probabilityEstimate * probabilityEstimate;
   }
   
   thresholdPerStep_.add( currentThreshold );
   gammaPerStep_.add(0.);
   probabilityEstimatePerStep_.add(probabilityEstimate);
-  coefficientOfVariationPerStep_.add(coefficientOfVariationSquare);
+  coefficientOfVariationPerStep_.add(sqrt(coefficientOfVariationSquare));
   
   // as long as the conditional failure domain do not overlap the global one
   while ( !stop )
@@ -216,7 +213,8 @@ void SubsetInverseSampling::run()
     if (stop)
     {
       // change the target probability of the final step
-      setConditionalProbability(targetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1]);
+      finalConditionalProbability = targetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1];
+      setConditionalProbability(finalConditionalProbability);
       // compute the final threshold
       currentThreshold = computeThreshold();
       // compute the current probability estimate 
@@ -248,7 +246,7 @@ void SubsetInverseSampling::run()
   // compute the threshold distribution
   // sampling of the asymptotic pf distribution
   // Truncated distribution to avoid negative probability realizations when imprecise simulation
-  Distribution probabilityDistribution = TruncatedDistribution(Normal(probabilityEstimate, sqrt(varianceEstimate)), 0, TruncatedDistribution::LOWER);
+  Distribution probabilityDistribution = TruncatedDistribution(Normal(probabilityEstimate, sqrt(varianceEstimate)), 0, 1);
   NumericalScalar sizeSample = 10000;
   NumericalSample sampleProbDistribution = probabilityDistribution.getSample(sizeSample);
   sampleThreshold_ = NumericalSample(sizeSample, 1);
@@ -270,6 +268,10 @@ void SubsetInverseSampling::run()
     NumericalPoint threshold(1, computeThreshold());
     sampleThreshold_[i] = threshold;
   }
+
+  // get back the final result values
+  currentLevelSample_ = allLevelSample[numberOfSteps_ -1];
+  setConditionalProbability(finalConditionalProbability);
 
   //update the event with the final threshold
   Event modified_event = Event(RandomVector(getEvent().getFunction(), getEvent().getAntecedent()), getEvent().getOperator(), currentThreshold);
