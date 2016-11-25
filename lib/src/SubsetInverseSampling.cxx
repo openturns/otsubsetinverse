@@ -271,7 +271,6 @@ void SubsetInverseSampling::run()
   }
 
   // get back the final result values
-  currentLevelSample_ = allLevelSample[-1];
   setConditionalProbability(finalConditionalProbability);
 
   //update the event with the final threshold
