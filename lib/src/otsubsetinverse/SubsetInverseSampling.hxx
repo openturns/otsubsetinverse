@@ -25,6 +25,8 @@
 #include <openturns/Simulation.hxx>
 #include <openturns/StandardEvent.hxx>
 #include "otsubsetinverse/OTSubsetInverseprivate.hxx"
+#include "openturns/Collection.hxx"
+#include "openturns/PersistentCollection.hxx"
 
 namespace OTSubsetInverse
 {
@@ -35,6 +37,9 @@ class OTSUBSETINVERSE_API SubsetInverseSampling
 {
 CLASSNAME
 public:
+
+  typedef OT::Collection<OT::NumericalSample> NumericalSampleCollection;
+  typedef OT::PersistentCollection<OT::NumericalSample> NumericalSamplePersistentCollection;
 
   /** Default Parameters */
   static const OT::UnsignedInteger DefaultMaximumOuterSampling;
@@ -77,6 +82,7 @@ public:
   OT::NumericalPoint getGammaPerStep() const;
   OT::NumericalPoint getCoefficientOfVariationPerStep() const;
   OT::NumericalPoint getProbabilityEstimatePerStep() const;
+  OT::NumericalPoint getThresholdCoefficientOfVariationPerStep() const;
   
   /** Keep event sample */
   void setKeepEventSample(bool keepEventSample);
@@ -84,6 +90,10 @@ public:
   /** Event input/output sample accessor */
   OT::NumericalSample getEventInputSample() const;
   OT::NumericalSample getEventOutputSample() const;
+
+  /** All level sample accessor*/
+  NumericalSampleCollection getOutputSample() const;
+  NumericalSampleCollection getInputSample() const;
 
   /** i-subset */
   void setISubset(OT::Bool iSubset);
@@ -127,7 +137,6 @@ private:
   OT::NumericalScalar betaMin_;// pre-sampling hypersphere exclusion radius
   OT::Bool keepEventSample_;// do we keep the event sample ?
   OT::NumericalScalar targetProbability_;// final target probability
-  OT::NumericalSample sampleThreshold_;// sample of the threshold distribution
 
   // some results
   OT::UnsignedInteger numberOfSteps_;// number of subset steps
@@ -135,15 +144,18 @@ private:
   OT::NumericalPoint gammaPerStep_;// intermediate gammas
   OT::NumericalPoint coefficientOfVariationPerStep_;// intermediate COVS
   OT::NumericalPoint probabilityEstimatePerStep_;// intermediate PFs
+  OT::NumericalPoint thresholdCoefficientOfVariationPerStep_;// intermediate threshold COVs
   OT::NumericalSample eventInputSample_;// event input sample
   OT::NumericalSample eventOutputSample_;// event output sample
+  NumericalSamplePersistentCollection allLevelSample_; // all event output sample
+  NumericalSamplePersistentCollection allPointSample_; // all event output sample
+  OT::Distribution thresholdDistribution_;//distribution of the final threshold value
 
   // attributes used for conveniency, not to be saved/loaded
   OT::StandardEvent standardEvent_;// the algorithm happens in U
   OT::UnsignedInteger dimension_;// input dimension
   OT::NumericalSample currentPointSample_;// X
   OT::NumericalSample currentLevelSample_;//f(X)
-
 
 }; /* class SubsetInverseSampling */
 

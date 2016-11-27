@@ -85,12 +85,14 @@ void SubsetInverseSampling::run()
   convergenceStrategy_.clear();
   numberOfSteps_ = 0;
   thresholdPerStep_.clear();
+  thresholdCoefficientOfVariationPerStep_.clear();
   gammaPerStep_.clear();
   coefficientOfVariationPerStep_.clear();
   probabilityEstimatePerStep_.clear();
   eventInputSample_.clear();
   eventOutputSample_.clear();
-  Collection<NumericalSample> allLevelSample;
+  allPointSample_.clear();
+  allLevelSample_.clear();
 
   dimension_ = getEvent().getAntecedent()->getDimension();
 
@@ -110,6 +112,8 @@ void SubsetInverseSampling::run()
   NumericalScalar varianceEstimate = 0.0;
   NumericalScalar coefficientOfVariationSquare = 0.0;
   NumericalScalar finalConditionalProbability = 0.0;
+  NumericalScalar thresholdVariance = 0.0;
+  NumericalScalar thresholdCoefficientOfVariationSquare = 0.0;
 
   // allocate input/output samples
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
@@ -117,7 +121,6 @@ void SubsetInverseSampling::run()
   const UnsignedInteger N = maximumOuterSampling * blockSize;
   currentPointSample_ = NumericalSample( N, dimension_ );
   currentLevelSample_ = NumericalSample( N, getEvent().getFunction().getOutputDimension() );
-  allLevelSample.add(currentLevelSample_);
   
   // Step 1: sampling
   for ( UnsignedInteger i = 0; i < maximumOuterSampling; ++ i )
@@ -180,12 +183,20 @@ void SubsetInverseSampling::run()
     coefficientOfVariationSquare = (1.0 - probabilityEstimate) / (probabilityEstimate * currentLevelSample_.getSize() * 1.0);
     // ... compute variance estimate
     varianceEstimate = coefficientOfVariationSquare * probabilityEstimate * probabilityEstimate;
+
+    // compute coefficient of variation of the threshold
+    Distribution ks = KernelSmoothing().build(currentLevelSample_);
+    thresholdVariance = probabilityEstimate * (1. - probabilityEstimate) / currentLevelSample_.getSize() / pow(ks.computePDF(currentThreshold), 2);
+    thresholdCoefficientOfVariationSquare = thresholdVariance / (currentThreshold * currentThreshold);
   }
   
+  allPointSample_.add(currentPointSample_);
+  allLevelSample_.add(currentLevelSample_);
   thresholdPerStep_.add( currentThreshold );
   gammaPerStep_.add(0.);
   probabilityEstimatePerStep_.add(probabilityEstimate);
   coefficientOfVariationPerStep_.add(sqrt(coefficientOfVariationSquare));
+  thresholdCoefficientOfVariationPerStep_.add(sqrt(thresholdCoefficientOfVariationSquare));
   
   // as long as the conditional failure domain do not overlap the global one
   while ( !stop )
@@ -197,7 +208,8 @@ void SubsetInverseSampling::run()
     generatePoints( currentThreshold );
 
     // save the level sample
-    allLevelSample.add(currentLevelSample_);
+    allPointSample_.add(currentPointSample_);
+    allLevelSample_.add(currentLevelSample_);
 
     // compute new threshold
     currentThreshold = computeThreshold();
@@ -228,11 +240,16 @@ void SubsetInverseSampling::run()
     NumericalScalar gamma = computeVarianceGamma( currentProbabilityEstimate, currentThreshold );
     currentCoVsquare = (1.0 - currentProbabilityEstimate) / (currentProbabilityEstimate * currentLevelSample_.getSize() * 1.0);
     coefficientOfVariationSquare += (1.0 + gamma) * currentCoVsquare;
+    // update threshold coefficient of variation
+    Distribution ks = KernelSmoothing().build(currentLevelSample_);
+    thresholdVariance = currentProbabilityEstimate * (1. - currentProbabilityEstimate) / currentLevelSample_.getSize() / pow(ks.computePDF(currentThreshold), 2);
+    thresholdCoefficientOfVariationSquare += (1.0 + gamma) * thresholdVariance / (currentThreshold * currentThreshold);
 
     thresholdPerStep_.add( currentThreshold );
     gammaPerStep_.add(gamma);
     probabilityEstimatePerStep_.add(probabilityEstimate);
     coefficientOfVariationPerStep_.add(sqrt(coefficientOfVariationSquare));
+    thresholdCoefficientOfVariationPerStep_.add(sqrt(thresholdCoefficientOfVariationSquare));
     
     // stop if the number of subset steps is too high, else results are not numerically defined anymore
     if ( fabs( pow( probabilityEstimate, 2.) ) < SpecFunc::MinNumericalScalar )
@@ -240,38 +257,13 @@ void SubsetInverseSampling::run()
 
     // compute variance estimate
     varianceEstimate = coefficientOfVariationSquare * pow( probabilityEstimate, 2. );
+    thresholdVariance = thresholdCoefficientOfVariationSquare * pow( currentThreshold, 2. );
 
     ++ numberOfSteps_;
   }
 
   // compute the threshold distribution
-  // sampling of the asymptotic pf distribution
-  // Truncated distribution to avoid negative probability realizations when imprecise simulation
-  Distribution probabilityDistribution = TruncatedDistribution(Normal(probabilityEstimate, sqrt(varianceEstimate)), 0, 1);
-  NumericalScalar sizeSample = 10000;
-  NumericalSample sampleProbDistribution = probabilityDistribution.getSample(sizeSample);
-  sampleThreshold_ = NumericalSample(sizeSample, 1);
-  // compute the corresponding threshold for each probability
-  for ( UnsignedInteger i = 0; i < sizeSample; ++ i )
-  { 
-    currentLevelSample_ = allLevelSample[numberOfSteps_ - 1];
-    NumericalScalar newConditionalProbability(sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_-2]);
-    // change the step when the probability is greater than the previous probability estimate step
-    // use the previous step data
-    NumericalScalar stepBackward(1);
-    while (newConditionalProbability >= 1)
-    { 
-      newConditionalProbability = sampleProbDistribution[i][0] / probabilityEstimatePerStep_[numberOfSteps_ - 2 - stepBackward];
-      currentLevelSample_ = allLevelSample[numberOfSteps_ - 1 - stepBackward];
-      stepBackward ++;
-    }
-    setConditionalProbability(newConditionalProbability);
-    NumericalPoint threshold(1, computeThreshold());
-    sampleThreshold_[i] = threshold;
-  }
-
-  // get back the final result values
-  setConditionalProbability(finalConditionalProbability);
+  thresholdDistribution_ = Normal(currentThreshold, sqrt(thresholdVariance));
 
   //update the event with the final threshold
   Event modified_event = Event(RandomVector(getEvent().getFunction(), getEvent().getAntecedent()), getEvent().getOperator(), currentThreshold);
@@ -481,8 +473,8 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
 /* Confidence Length of the threshold */
 NumericalScalar SubsetInverseSampling::getThresholdConfidenceLength(const NumericalScalar level) const
 {
-  NumericalScalar thresholdInf = sampleThreshold_.computeQuantile((1 - level)/2)[0];
-  NumericalScalar thresholdSup = sampleThreshold_.computeQuantile(level/2)[0];
+  NumericalScalar thresholdInf = thresholdDistribution_.computeQuantile((1 - level)/2)[0];
+  NumericalScalar thresholdSup = thresholdDistribution_.computeQuantile(1.-(1 - level)/2)[0];
   return NumericalScalar (std::max(thresholdSup, thresholdInf) - std::min(thresholdSup, thresholdInf));
 }
 
@@ -553,6 +545,10 @@ OT::NumericalPoint SubsetInverseSampling::getThresholdPerStep() const
   return thresholdPerStep_;
 }
 
+OT::NumericalPoint SubsetInverseSampling::getThresholdCoefficientOfVariationPerStep() const
+{
+  return thresholdCoefficientOfVariationPerStep_;
+}
 
 void SubsetInverseSampling::setKeepEventSample(bool keepEventSample)
 {
@@ -571,6 +567,15 @@ NumericalSample SubsetInverseSampling::getEventOutputSample() const
   return eventOutputSample_;
 }
 
+SubsetInverseSampling::NumericalSampleCollection SubsetInverseSampling::getInputSample() const
+{
+  return allPointSample_;
+}
+
+SubsetInverseSampling::NumericalSampleCollection SubsetInverseSampling::getOutputSample() const
+{
+  return allLevelSample_;
+}
 
 void SubsetInverseSampling::setISubset(OT::Bool iSubset)
 {

@@ -102,7 +102,7 @@ Pf = 0.0002
 Threshold = 0.0202715501987
 >>> print('Threshold confidence length = {}'.format(
 ...                         mySS.getThresholdConfidenceLength(0.90)))
-Threshold confidence length = 0.0397951893748
+Threshold confidence length = 0.0244117131807
 
 See also
 --------
@@ -118,6 +118,15 @@ Returns
 coef : `~openturns.NumericalPoint`
     Coefficient of variation at each subset step."
 
+// ---------------------------------------------------------------------------
+
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::getThresholdCoefficientOfVariationPerStep
+"Threshold coefficient of variation per step accessor.
+
+Returns
+-------
+coef : `~openturns.NumericalPoint`
+    Coefficient of variation at each subset step."
 // ---------------------------------------------------------------------------
 
 %feature("docstring") OTSubsetInverse::SubsetInverseSampling::setConditionalProbability
@@ -210,6 +219,26 @@ Returns
 -------
 outputSample : `~openturns.NumericalSample`
     Ouput sample."
+
+// ---------------------------------------------------------------------------
+
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::getInputSample
+"All input sample accessor.
+
+Returns
+-------
+inputSample : `~openturns.NumericalSample`
+    Input sample."
+
+// ---------------------------------------------------------------------------
+
+%feature("docstring") OTSubsetInverse::SubsetInverseSampling::getOutputSample
+"All output sample accessor.
+
+Returns
+-------
+outputSample : `~openturns.NumericalSample`
+    Output sample."
 
 // ---------------------------------------------------------------------------
 
