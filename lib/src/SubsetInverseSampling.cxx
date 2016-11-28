@@ -111,7 +111,6 @@ void SubsetInverseSampling::run()
   NumericalScalar currentCoVsquare = 0.0;
   NumericalScalar varianceEstimate = 0.0;
   NumericalScalar coefficientOfVariationSquare = 0.0;
-  NumericalScalar finalConditionalProbability = 0.0;
   NumericalScalar thresholdVariance = 0.0;
   NumericalScalar thresholdCoefficientOfVariationSquare = 0.0;
 
@@ -226,12 +225,21 @@ void SubsetInverseSampling::run()
     if (stop)
     {
       // change the target probability of the final step
-      finalConditionalProbability = targetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1];
-      setConditionalProbability(finalConditionalProbability);
+      setConditionalProbability(targetProbability_ / probabilityEstimatePerStep_[numberOfSteps_-1]);
       // compute the final threshold
       currentThreshold = computeThreshold();
       // compute the current probability estimate 
       NumericalScalar currentProbabilityEstimate = computeProbability( probabilityEstimatePerStep_[numberOfSteps_-1], currentThreshold );
+      // update probability estimate
+      probabilityEstimate = probabilityEstimatePerStep_[numberOfSteps_-1] * currentProbabilityEstimate;
+
+      // update a second time the conditional probability to be as close as possible of the target probability
+      // change the target probability of the final step
+      setConditionalProbability(targetProbability_ * targetProbability_ / (probabilityEstimatePerStep_[numberOfSteps_-1] * probabilityEstimate));
+      // compute the final threshold
+      currentThreshold = computeThreshold();
+      // compute the current probability estimate 
+      currentProbabilityEstimate = computeProbability( probabilityEstimatePerStep_[numberOfSteps_-1], currentThreshold );
       // update probability estimate
       probabilityEstimate = probabilityEstimatePerStep_[numberOfSteps_-1] * currentProbabilityEstimate;
     }
@@ -262,7 +270,7 @@ void SubsetInverseSampling::run()
     ++ numberOfSteps_;
   }
 
-  // compute the threshold distribution
+  // define the threshold distribution
   thresholdDistribution_ = Normal(currentThreshold, sqrt(thresholdVariance));
 
   //update the event with the final threshold
