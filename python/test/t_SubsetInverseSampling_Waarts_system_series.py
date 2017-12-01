@@ -37,16 +37,16 @@ outputFunction[0] = "g"
 formulas = Description(outputFunction.getSize())
 formulas[0] = "min(0.1 * (u1 - u2)^2.0 - (u1 + u2) / sqrt(2.0) + 3.0, 0.1 * (u1 - u2)^2.0 \
  + (u1 + u2) / sqrt(2.0) + 3.0, u1 - u2 + 3.5 * sqrt(2.0), -u1 + u2 + 3.5 * sqrt(2.0))"
-limitState = NumericalMathFunction(inputFunction, outputFunction, formulas)
+limitState = SymbolicFunction(inputFunction, formulas)
 dim = limitState.getInputDimension()
 
 ###########################################################################
 # Probabilistic model
 ###########################################################################
 
-mean = NumericalPoint(dim, 0.0)
+mean = Point(dim, 0.0)
 
-sigma = NumericalPoint(dim, 1.0)
+sigma = Point(dim, 1.0)
 
 R = IdentityMatrix(dim)
 myDistribution = Normal(mean, sigma, R)

@@ -7,17 +7,21 @@ using namespace OTSubsetInverse;
 
 int main(int argc, char **argv)
 {
+  RandomGenerator::SetSeed(0);
+
   Distribution myDistribution = Normal();
   RandomVector vect(myDistribution);
   
-  NumericalMathFunction limitState("X","Y","2*X");
+  SymbolicFunction limitState("X","2*X");
   RandomVector output(limitState, vect);
 
   Event myEvent(output, ComparisonOperator(Less()), 0.0);
     
   NumericalScalar finalProbability(0.0001);
 
-  OTSubsetInverse::SubsetInverseSampling a(myEvent, finalProbability);
-  std::cout << a << std::endl; 
+  OTSubsetInverse::SubsetInverseSampling ssi(myEvent, finalProbability);
+  std::cout << ssi << std::endl;
+  ssi.run();
+  std::cout << ssi.getResult() << std::endl;
   return 0;
 }

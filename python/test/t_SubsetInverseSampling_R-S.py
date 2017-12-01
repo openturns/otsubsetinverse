@@ -26,17 +26,17 @@ RandomGenerator.SetSeed(0)
 # Physical model
 ###########################################################################
 
-limitState = NumericalMathFunction(['u1', 'u2'], ['g'], ['u1-u2'])
+limitState = SymbolicFunction(['u1', 'u2'], ['u1-u2'])
 dim = limitState.getInputDimension()
 
 ###########################################################################
 # Probabilistic model
 ###########################################################################
 
-mean = NumericalPoint(dim, 0.0)
+mean = Point(dim, 0.0)
 mean[0] = 7.
 mean[1] = 2.
-sigma = NumericalPoint(dim, 1.0)
+sigma = Point(dim, 1.0)
 
 R = IdentityMatrix(dim)
 myDistribution = Normal(mean, sigma, R)
