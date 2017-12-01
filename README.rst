@@ -21,6 +21,8 @@ Linux
 Windows
 -------
 
+Use argument make PYBASEVER=3.6 for python 3.6.
+
 - 32 bits
 
     cd otsubsetinverse/distro/windows
