@@ -38,8 +38,8 @@ class OTSUBSETINVERSE_API SubsetInverseSampling
 CLASSNAME
 public:
 
-  typedef OT::Collection<OT::NumericalSample> NumericalSampleCollection;
-  typedef OT::PersistentCollection<OT::NumericalSample> NumericalSamplePersistentCollection;
+  typedef OT::Collection<OT::Sample> SampleCollection;
+  typedef OT::PersistentCollection<OT::Sample> SamplePersistentCollection;
 
   /** Default Parameters */
   static const OT::UnsignedInteger DefaultMaximumOuterSampling;
@@ -78,22 +78,22 @@ public:
   OT::NumericalScalar getThresholdConfidenceLength(const OT::NumericalScalar level = OT::ResourceMap::GetAsNumericalScalar( "SimulationResultImplementation-DefaultConfidenceLevel" )) const;
     
   /** Stepwise result accessors */
-  OT::NumericalPoint getThresholdPerStep() const;
-  OT::NumericalPoint getGammaPerStep() const;
-  OT::NumericalPoint getCoefficientOfVariationPerStep() const;
-  OT::NumericalPoint getProbabilityEstimatePerStep() const;
-  OT::NumericalPoint getThresholdCoefficientOfVariationPerStep() const;
+  OT::Point getThresholdPerStep() const;
+  OT::Point getGammaPerStep() const;
+  OT::Point getCoefficientOfVariationPerStep() const;
+  OT::Point getProbabilityEstimatePerStep() const;
+  OT::Point getThresholdCoefficientOfVariationPerStep() const;
   
   /** Keep event sample */
   void setKeepEventSample(bool keepEventSample);
   
   /** Event input/output sample accessor */
-  OT::NumericalSample getEventInputSample() const;
-  OT::NumericalSample getEventOutputSample() const;
+  OT::Sample getEventInputSample() const;
+  OT::Sample getEventOutputSample() const;
 
   /** All level sample accessor*/
-  NumericalSampleCollection getOutputSample() const;
-  NumericalSampleCollection getInputSample() const;
+  SampleCollection getOutputSample() const;
+  SampleCollection getInputSample() const;
 
   /** i-subset */
   void setISubset(OT::Bool iSubset);
@@ -113,7 +113,7 @@ public:
 
 private:
   /** Compute the block sample */
-  OT::NumericalSample computeBlockSample();
+  OT::Sample computeBlockSample();
 
   /** Compute the new threshold corresponding to the conditional failure probability */
   OT::NumericalScalar computeThreshold();
@@ -140,22 +140,22 @@ private:
 
   // some results
   OT::UnsignedInteger numberOfSteps_;// number of subset steps
-  OT::NumericalPoint thresholdPerStep_;// intermediate thresholds
-  OT::NumericalPoint gammaPerStep_;// intermediate gammas
-  OT::NumericalPoint coefficientOfVariationPerStep_;// intermediate COVS
-  OT::NumericalPoint probabilityEstimatePerStep_;// intermediate PFs
-  OT::NumericalPoint thresholdCoefficientOfVariationPerStep_;// intermediate threshold COVs
-  OT::NumericalSample eventInputSample_;// event input sample
-  OT::NumericalSample eventOutputSample_;// event output sample
-  NumericalSamplePersistentCollection allLevelSample_; // all event output sample
-  NumericalSamplePersistentCollection allPointSample_; // all event output sample
+  OT::Point thresholdPerStep_;// intermediate thresholds
+  OT::Point gammaPerStep_;// intermediate gammas
+  OT::Point coefficientOfVariationPerStep_;// intermediate COVS
+  OT::Point probabilityEstimatePerStep_;// intermediate PFs
+  OT::Point thresholdCoefficientOfVariationPerStep_;// intermediate threshold COVs
+  OT::Sample eventInputSample_;// event input sample
+  OT::Sample eventOutputSample_;// event output sample
+  SamplePersistentCollection allLevelSample_; // all event output sample
+  SamplePersistentCollection allPointSample_; // all event output sample
   OT::Distribution thresholdDistribution_;//distribution of the final threshold value
 
   // attributes used for conveniency, not to be saved/loaded
   OT::StandardEvent standardEvent_;// the algorithm happens in U
   OT::UnsignedInteger dimension_;// input dimension
-  OT::NumericalSample currentPointSample_;// X
-  OT::NumericalSample currentLevelSample_;//f(X)
+  OT::Sample currentPointSample_;// X
+  OT::Sample currentLevelSample_;//f(X)
 
 }; /* class SubsetInverseSampling */
 

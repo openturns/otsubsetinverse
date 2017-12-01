@@ -44,8 +44,8 @@ SubsetInverseSampling::SubsetInverseSampling()
 , iSubset_(false)
 , betaMin_(0.)
 , keepEventSample_(false)
-, numberOfSteps_(0)
 , targetProbability_(0.)
+, numberOfSteps_(0)
 {
 }
 
@@ -61,8 +61,8 @@ SubsetInverseSampling::SubsetInverseSampling(const Event & event,
 , iSubset_(false)
 , betaMin_(DefaultBetaMin)
 , keepEventSample_(false)
-, numberOfSteps_(0)
 , targetProbability_(targetProbability)
+, numberOfSteps_(0)
 {
   setMaximumOuterSampling( DefaultMaximumOuterSampling );// overide simulation default outersampling
   UnsignedInteger outputDimension = event.getFunction().getOutputDimension();
@@ -118,13 +118,13 @@ void SubsetInverseSampling::run()
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
   const UnsignedInteger blockSize = getBlockSize();
   const UnsignedInteger N = maximumOuterSampling * blockSize;
-  currentPointSample_ = NumericalSample( N, dimension_ );
-  currentLevelSample_ = NumericalSample( N, getEvent().getFunction().getOutputDimension() );
+  currentPointSample_ = Sample( N, dimension_ );
+  currentLevelSample_ = Sample( N, getEvent().getFunction().getOutputDimension() );
   
   // Step 1: sampling
   for ( UnsignedInteger i = 0; i < maximumOuterSampling; ++ i )
   {
-    NumericalSample inputSample;
+    Sample inputSample;
     if (!iSubset_) {
       // crude MC
       inputSample = standardEvent_.getAntecedent()->getDistribution().getSample( blockSize );
@@ -133,10 +133,10 @@ void SubsetInverseSampling::run()
       // conditional sampling
       TruncatedDistribution truncatedChiSquare(ChiSquare(dimension_), betaMin_ * betaMin_, TruncatedDistribution::LOWER);
       Normal normal(dimension_);
-      inputSample = NumericalSample(0, dimension_);
+      inputSample = Sample(0, dimension_);
       for ( UnsignedInteger j = 0; j < blockSize; ++ j)
       {
-        NumericalPoint direction = normal.getRealization();
+        Point direction = normal.getRealization();
         NumericalScalar norm = direction.norm();
         NumericalScalar radius = sqrt(truncatedChiSquare.getRealization()[0]);
         if (fabs(norm) > 1e-12)
@@ -146,7 +146,7 @@ void SubsetInverseSampling::run()
         inputSample.add(direction * radius);
       }
     }
-    NumericalSample blockSample( standardEvent_.getFunction()( inputSample ) );
+    Sample blockSample( standardEvent_.getFunction()( inputSample ) );
     for ( UnsignedInteger j = 0 ; j < blockSize; ++ j )
     {
       currentPointSample_[ i*blockSize+j ] = inputSample[j];
@@ -281,8 +281,8 @@ void SubsetInverseSampling::run()
   // keep the event sample if requested
   if (keepEventSample_)
   {
-    eventInputSample_ = NumericalSample(0, dimension_);  
-    eventOutputSample_ = NumericalSample (0, getEvent().getFunction().getOutputDimension());
+    eventInputSample_ = Sample(0, dimension_);  
+    eventOutputSample_ = Sample (0, getEvent().getFunction().getOutputDimension());
     for ( UnsignedInteger i = 0; i < currentPointSample_.getSize(); ++ i )
     {
       if ( getEvent().getOperator()( currentLevelSample_[i][0], currentThreshold ) )
@@ -300,9 +300,9 @@ void SubsetInverseSampling::run()
 
 
 /* Compute the block sample */
-NumericalSample SubsetInverseSampling::computeBlockSample()
+Sample SubsetInverseSampling::computeBlockSample()
 {
-  return NumericalSample();
+  return Sample();
 }
 
 
@@ -346,7 +346,7 @@ NumericalScalar SubsetInverseSampling::computeProbability(NumericalScalar probab
     probabilityEstimate = (meanBlock + (size - 1.0) * probabilityEstimate) / size;
     
     // store convergence at each block
-    NumericalPoint convergencePoint(2);
+    Point convergencePoint(2);
     convergencePoint[0] = probabilityEstimate * probabilityEstimateFactor;
     convergencePoint[1] = varianceEstimate * probabilityEstimateFactor * probabilityEstimateFactor / size;
     convergenceStrategy_.store(convergencePoint);
@@ -389,7 +389,7 @@ NumericalScalar SubsetInverseSampling::computeVarianceGamma(NumericalScalar curr
   const UnsignedInteger N = currentPointSample_.getSize();
   const UnsignedInteger Nc = std::max<UnsignedInteger>(1, conditionalProbability_ * N);
   Matrix IndicatorMatrice( Nc, N / Nc );
-  NumericalPoint correlationSequence( N / Nc - 1 );
+  Point correlationSequence( N / Nc - 1 );
   NumericalScalar currentFailureProbability2 = pow( currentFailureProbability, 2. );
   for ( UnsignedInteger i = 0; i < N / Nc; ++ i )
   {
@@ -411,7 +411,7 @@ NumericalScalar SubsetInverseSampling::computeVarianceGamma(NumericalScalar curr
     correlationSequence[k] -= currentFailureProbability2;
   }
   const NumericalScalar R0 = currentFailureProbability * ( 1.0 - currentFailureProbability );
-  NumericalPoint rho = ((1.0 / R0) * correlationSequence);
+  Point rho = ((1.0 / R0) * correlationSequence);
   NumericalScalar gamma = 0.0;
   for ( UnsignedInteger k = 0; k < N / Nc - 1; ++ k )
   {
@@ -432,7 +432,7 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
   
   for ( UnsignedInteger i = 0; i < maximumOuterSampling; ++ i )
   {    
-    NumericalSample inputSample( blockSize, dimension_ );
+    Sample inputSample( blockSize, dimension_ );
     for ( UnsignedInteger j = 0; j < blockSize; ++ j )
     {
       // assign the new point to the seed, seed points being regrouped at the beginning of the sample
@@ -443,11 +443,11 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
       }
       
       // generate a new point
-      NumericalPoint oldPoint( currentPointSample_[ i*blockSize+j ] );
-      NumericalPoint newPoint( oldPoint + randomWalk.getRealization() );
+      Point oldPoint( currentPointSample_[ i*blockSize+j ] );
+      Point newPoint( oldPoint + randomWalk.getRealization() );
       
       // 1. accept / reject new components
-      NumericalPoint uniform( RandomGenerator::Generate(dimension_) );
+      Point uniform( RandomGenerator::Generate(dimension_) );
       for (UnsignedInteger k = 0; k < dimension_; ++ k)
       {
         // compute ratio
@@ -463,7 +463,7 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
       inputSample[j] = newPoint;
     }
    
-    NumericalSample blockSample( standardEvent_.getFunction()( inputSample ) );
+    Sample blockSample( standardEvent_.getFunction()( inputSample ) );
 
     for ( UnsignedInteger j = 0; j < getBlockSize(); ++ j )
     {
@@ -530,30 +530,30 @@ UnsignedInteger SubsetInverseSampling::getNumberOfSteps()
 }
 
 
-OT::NumericalPoint SubsetInverseSampling::getGammaPerStep() const
+OT::Point SubsetInverseSampling::getGammaPerStep() const
 {
   return gammaPerStep_;
 }
 
 
-OT::NumericalPoint SubsetInverseSampling::getCoefficientOfVariationPerStep() const
+OT::Point SubsetInverseSampling::getCoefficientOfVariationPerStep() const
 {
   return coefficientOfVariationPerStep_;
 }
 
 
-OT::NumericalPoint SubsetInverseSampling::getProbabilityEstimatePerStep() const
+OT::Point SubsetInverseSampling::getProbabilityEstimatePerStep() const
 {
   return probabilityEstimatePerStep_;
 }
 
 
-OT::NumericalPoint SubsetInverseSampling::getThresholdPerStep() const
+OT::Point SubsetInverseSampling::getThresholdPerStep() const
 {
   return thresholdPerStep_;
 }
 
-OT::NumericalPoint SubsetInverseSampling::getThresholdCoefficientOfVariationPerStep() const
+OT::Point SubsetInverseSampling::getThresholdCoefficientOfVariationPerStep() const
 {
   return thresholdCoefficientOfVariationPerStep_;
 }
@@ -564,23 +564,23 @@ void SubsetInverseSampling::setKeepEventSample(bool keepEventSample)
 }
 
 
-NumericalSample SubsetInverseSampling::getEventInputSample() const
+Sample SubsetInverseSampling::getEventInputSample() const
 {
   return eventInputSample_;
 }
 
 
-NumericalSample SubsetInverseSampling::getEventOutputSample() const
+Sample SubsetInverseSampling::getEventOutputSample() const
 {
   return eventOutputSample_;
 }
 
-SubsetInverseSampling::NumericalSampleCollection SubsetInverseSampling::getInputSample() const
+SubsetInverseSampling::SampleCollection SubsetInverseSampling::getInputSample() const
 {
   return allPointSample_;
 }
 
-SubsetInverseSampling::NumericalSampleCollection SubsetInverseSampling::getOutputSample() const
+SubsetInverseSampling::SampleCollection SubsetInverseSampling::getOutputSample() const
 {
   return allLevelSample_;
 }
