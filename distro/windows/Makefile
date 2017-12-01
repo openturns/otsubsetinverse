@@ -47,7 +47,7 @@ export PYTHONPATH := $(MINGW_PREFIX)/$(TARGET)/lib/python$(PYBASEVER_NODOT)
 
 # Module paths
 MOD_SRC    ?= $(PWD)/../..
-MOD_BUILD  ?= $(MOD_SRC)/build-py$(PYBASEVER)-OT$(OT_VERSION)-$(TARGET)
+MOD_BUILD  ?= $(MOD_SRC)/build-py$(PYBASEVER)-ot$(OT_VERSION)-$(TARGET)
 MOD_PREFIX ?= $(MOD_BUILD)/install
 MODULE_VERSION = $(shell cat $(MOD_SRC)/VERSION)
 
