@@ -1,0 +1,12 @@
+stages:
+  - docker_linux
+
+run_linux:
+  stage: docker_linux
+  script:
+    - docker build -t otsubsetinverse .
+    - docker run otsubsetinverse make check -j10
+    - docker run otsubsetinverse make installcheck -j10
+  tags:
+    - calcul-5-shell 
+
