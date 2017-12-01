@@ -2,16 +2,33 @@
     :target: https://travis-ci.org/openturns/otsubsetinverse
 
 OTSubsetInverse Module
-=================
+======================
 
-OTSubsetInverse is a module for OpenTURNS
+The goal of the module is to compute the performance of a function (threhold value) for a given target probability. The technique uses the subset sampling in the same way as in the original.
 
-More information can found at http://www.openturns.org
+Compilation
+===========
 
+Linux
+-----
 
-Installation
-============
-Please see the http://trac.openturns.org/wiki/Modules
-for instructions on installing OpenTURNS modules on various platforms from binaries or sources.
+    mkdir build && cd build
+    cmake -DCMAKE_INSTALL_PREFIX=$PWD/install \
+    -DOpenTURNS_DIR=OT_PREFIX/lib/cmake/openturns ..
+    make
+    make check
+    make install
+    make installcheck
 
--- The OpenTURNS team
+Windows
+-------
+
+- 32 bits
+
+    cd otsubsetinverse/distro/windows
+    make OT_PREFIX=..openturns-src/build-i686-w64-mingw32/install
+
+- 64 bits
+
+    make ARCH=x86_64 OT_PREFIX=..openturns-src/build-x86_64-w64-mingw32/install  # (for a 64 bits target)
+
