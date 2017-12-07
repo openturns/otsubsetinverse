@@ -99,8 +99,8 @@ void SubsetInverseSampling::run()
   if ( getMaximumCoefficientOfVariation() != ResourceMap::GetAsNumericalScalar( "Simulation-DefaultMaximumCoefficientOfVariation" ) )
     Log::Warn(OSS() << "The maximum coefficient of variation was set. It won't be used as termination criteria.");
 
-  if ( conditionalProbability_ * getMaximumOuterSampling() < 1 )
-    throw InvalidArgumentException(HERE) << "maximumOuterSampling (" << getMaximumOuterSampling() << ") should be >= " << ceil( 1.0 / conditionalProbability_ );
+  if ( conditionalProbability_ * getMaximumOuterSampling() * getBlockSize() < 1 )
+    throw InvalidArgumentException(HERE) << "The number of samples (maximumOuterSampling x blockSize : " << getMaximumOuterSampling() << " x " << getBlockSize() << ") should be >= " << ceil( 1.0 / conditionalProbability_ );
   
   if ( getMaximumOuterSampling() * getBlockSize() <= 100 )
     Log::Warn(OSS() << "The number of samples per step is very low : " << getMaximumOuterSampling()*getBlockSize() << ".");
