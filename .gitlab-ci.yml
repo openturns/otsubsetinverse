@@ -6,7 +6,7 @@ stages:
 run_linux:
   stage: docker_linux
   script:
-    - docker build -t docker/linux/otsubsetinverse .
+    - docker build -f docker/linux/dockerfile_linux -t otsubsetinverse .
     - docker run otsubsetinverse make check -j10
     - docker run otsubsetinverse make installcheck -j10
   tags:
