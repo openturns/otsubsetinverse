@@ -8,6 +8,7 @@ ENV PYTHONHOME /usr/${ARCH}-w64-mingw32/
 ENV PYTHONPATH /usr/${ARCH}-w64-mingw32/lib/python27
 RUN /usr/${ARCH}-w64-mingw32/bin/python27.exe -V
 
+
 # openturns
 RUN git clone https://github.com/openturns/openturns.git /tmp/openturns && cd /tmp/openturns \
   && git checkout 1.11 \
