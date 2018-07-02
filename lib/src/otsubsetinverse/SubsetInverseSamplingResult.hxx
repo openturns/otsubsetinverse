@@ -38,18 +38,18 @@ public:
 
   /** Constructor with parameters */
   SubsetInverseSamplingResult(const OT::Event & event,
-                       const OT::NumericalScalar probabilityEstimate,
-                       const OT::NumericalScalar varianceEstimate,
+                       const OT::Scalar probabilityEstimate,
+                       const OT::Scalar varianceEstimate,
                        const OT::UnsignedInteger outerSampling,
                        const OT::UnsignedInteger blockSize,
-                       const OT::NumericalScalar coefficientOfVariation = 0.0,
-                       const OT::NumericalScalar threshold = 0.0);
+                       const OT::Scalar coefficientOfVariation = 0.0,
+                       const OT::Scalar threshold = 0.0);
 
   /** Virtual constructor */
   virtual SubsetInverseSamplingResult * clone() const;
 
   /** Coefficient of variation estimate accessor */
-  virtual OT::NumericalScalar getCoefficientOfVariation() const;
+  virtual OT::Scalar getCoefficientOfVariation() const;
 
   /** String converter */
   virtual OT::String __repr__() const;
@@ -61,8 +61,8 @@ public:
   virtual void load(OT::Advocate & adv);
 
 protected:
-  OT::NumericalScalar coefficientOfVariation_;
-  OT::NumericalScalar threshold_;
+  OT::Scalar coefficientOfVariation_;
+  OT::Scalar threshold_;
 
 private:
 

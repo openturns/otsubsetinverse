@@ -43,12 +43,12 @@ SubsetInverseSamplingResult::SubsetInverseSamplingResult()
 
 /* Constructor with parameters */
 SubsetInverseSamplingResult::SubsetInverseSamplingResult(const Event & event,
-  const NumericalScalar probabilityEstimate,
-  const NumericalScalar varianceEstimate,
+  const Scalar probabilityEstimate,
+  const Scalar varianceEstimate,
   const UnsignedInteger outerSampling,
   const UnsignedInteger blockSize,
-  const NumericalScalar coefficientOfVariation,
-  const NumericalScalar threshold)
+  const Scalar coefficientOfVariation,
+  const Scalar threshold)
 : SimulationResultImplementation(event, probabilityEstimate, varianceEstimate, outerSampling, blockSize),
   coefficientOfVariation_(coefficientOfVariation),
   threshold_(threshold)
@@ -64,7 +64,7 @@ SubsetInverseSamplingResult * SubsetInverseSamplingResult::clone() const
 
 
 /* Coefficient of variation estimate accessor */
-NumericalScalar SubsetInverseSamplingResult::getCoefficientOfVariation() const
+Scalar SubsetInverseSamplingResult::getCoefficientOfVariation() const
 {
   return coefficientOfVariation_;
 }

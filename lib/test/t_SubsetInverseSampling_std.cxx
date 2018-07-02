@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 
   Event myEvent(output, ComparisonOperator(Less()), 0.0);
     
-  NumericalScalar finalProbability(0.0001);
+  Scalar finalProbability(0.0001);
 
   OTSubsetInverse::SubsetInverseSampling ssi(myEvent, finalProbability);
   std::cout << ssi << std::endl;

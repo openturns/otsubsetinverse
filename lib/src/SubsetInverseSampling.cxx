@@ -31,9 +31,9 @@ CLASSNAMEINIT(SubsetInverseSampling);
 static Factory<SubsetInverseSampling> Factory_SubsetInverseSampling;
 
 const UnsignedInteger SubsetInverseSampling::DefaultMaximumOuterSampling = 10000;
-const NumericalScalar SubsetInverseSampling::DefaultConditionalProbability = 0.1;
-const NumericalScalar SubsetInverseSampling::DefaultProposalRange = 2.0;
-const NumericalScalar SubsetInverseSampling::DefaultBetaMin = 2.0;
+const Scalar SubsetInverseSampling::DefaultConditionalProbability = 0.1;
+const Scalar SubsetInverseSampling::DefaultProposalRange = 2.0;
+const Scalar SubsetInverseSampling::DefaultBetaMin = 2.0;
 
 
 /* Default constructor */
@@ -52,9 +52,9 @@ SubsetInverseSampling::SubsetInverseSampling()
 
 /* Constructor with parameters */
 SubsetInverseSampling::SubsetInverseSampling(const Event & event,
-                               const NumericalScalar targetProbability,
-                               const NumericalScalar proposalRange,
-                               const NumericalScalar conditionalProbability)
+                               const Scalar targetProbability,
+                               const Scalar proposalRange,
+                               const Scalar conditionalProbability)
 : Simulation(event)
 , proposalRange_(proposalRange)
 , conditionalProbability_(conditionalProbability)
@@ -94,9 +94,9 @@ void SubsetInverseSampling::run()
   allPointSample_.clear();
   allLevelSample_.clear();
 
-  dimension_ = getEvent().getAntecedent()->getDimension();
+  dimension_ = getEvent().getAntecedent().getDimension();
 
-  if ( getMaximumCoefficientOfVariation() != ResourceMap::GetAsNumericalScalar( "Simulation-DefaultMaximumCoefficientOfVariation" ) )
+  if ( getMaximumCoefficientOfVariation() != ResourceMap::GetAsScalar( "Simulation-DefaultMaximumCoefficientOfVariation" ) )
     Log::Warn(OSS() << "The maximum coefficient of variation was set. It won't be used as termination criteria.");
 
   if ( conditionalProbability_ * getMaximumOuterSampling() * getBlockSize() < 1 )
@@ -108,11 +108,11 @@ void SubsetInverseSampling::run()
   // perform isoprobabilistic transformation (the study is done in the standard space):
   standardEvent_ = StandardEvent(getEvent());
 
-  NumericalScalar currentCoVsquare = 0.0;
-  NumericalScalar varianceEstimate = 0.0;
-  NumericalScalar coefficientOfVariationSquare = 0.0;
-  NumericalScalar thresholdVariance = 0.0;
-  NumericalScalar thresholdCoefficientOfVariationSquare = 0.0;
+  Scalar currentCoVsquare = 0.0;
+  Scalar varianceEstimate = 0.0;
+  Scalar coefficientOfVariationSquare = 0.0;
+  Scalar thresholdVariance = 0.0;
+  Scalar thresholdCoefficientOfVariationSquare = 0.0;
 
   // allocate input/output samples
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
@@ -127,7 +127,7 @@ void SubsetInverseSampling::run()
     Sample inputSample;
     if (!iSubset_) {
       // crude MC
-      inputSample = standardEvent_.getAntecedent()->getDistribution().getSample( blockSize );
+      inputSample = standardEvent_.getAntecedent().getDistribution().getSample( blockSize );
     }
     else {
       // conditional sampling
@@ -137,8 +137,8 @@ void SubsetInverseSampling::run()
       for ( UnsignedInteger j = 0; j < blockSize; ++ j)
       {
         Point direction = normal.getRealization();
-        NumericalScalar norm = direction.norm();
-        NumericalScalar radius = sqrt(truncatedChiSquare.getRealization()[0]);
+        Scalar norm = direction.norm();
+        Scalar radius = sqrt(truncatedChiSquare.getRealization()[0]);
         if (fabs(norm) > 1e-12)
         {
           radius *= 1.0 / norm;
@@ -164,14 +164,14 @@ void SubsetInverseSampling::run()
   }
 
   // computation of the first intermediate threshold with the sample create with a normal distribution */
-  NumericalScalar currentThreshold = computeThreshold(); 
+  Scalar currentThreshold = computeThreshold(); 
   
   // compute monte carlo probability estimate
-  NumericalScalar probabilityEstimate = computeProbability(1.0, currentThreshold);
+  Scalar probabilityEstimate = computeProbability(1.0, currentThreshold);
   
   if (iSubset_)
   {
-    NumericalScalar correction = 1.0 - ChiSquare(standardEvent_.getImplementation()->getAntecedent()->getDistribution().getDimension()).computeCDF(betaMin_ * betaMin_);
+    Scalar correction = 1.0 - ChiSquare(standardEvent_.getImplementation()->getAntecedent().getDistribution().getDimension()).computeCDF(betaMin_ * betaMin_);
     probabilityEstimate *= correction;
   }
 
@@ -214,7 +214,7 @@ void SubsetInverseSampling::run()
     currentThreshold = computeThreshold();
 
     // compute probability estimate on the current sample and group seeds at the beginning of the work sample
-    NumericalScalar currentProbabilityEstimate = computeProbability( probabilityEstimate, currentThreshold );
+    Scalar currentProbabilityEstimate = computeProbability( probabilityEstimate, currentThreshold );
     
     // update probability estimate
     probabilityEstimate *= currentProbabilityEstimate;
@@ -229,7 +229,7 @@ void SubsetInverseSampling::run()
       // compute the final threshold
       currentThreshold = computeThreshold();
       // compute the current probability estimate 
-      NumericalScalar currentProbabilityEstimate = computeProbability( probabilityEstimatePerStep_[numberOfSteps_-1], currentThreshold );
+      Scalar currentProbabilityEstimate = computeProbability( probabilityEstimatePerStep_[numberOfSteps_-1], currentThreshold );
       // update probability estimate
       probabilityEstimate = probabilityEstimatePerStep_[numberOfSteps_-1] * currentProbabilityEstimate;
 
@@ -245,7 +245,7 @@ void SubsetInverseSampling::run()
     }
 
     // update coefficient of variation 
-    NumericalScalar gamma = computeVarianceGamma( currentProbabilityEstimate, currentThreshold );
+    Scalar gamma = computeVarianceGamma( currentProbabilityEstimate, currentThreshold );
     currentCoVsquare = (1.0 - currentProbabilityEstimate) / (currentProbabilityEstimate * currentLevelSample_.getSize() * 1.0);
     coefficientOfVariationSquare += (1.0 + gamma) * currentCoVsquare;
     // update threshold coefficient of variation
@@ -260,7 +260,7 @@ void SubsetInverseSampling::run()
     thresholdCoefficientOfVariationPerStep_.add(sqrt(thresholdCoefficientOfVariationSquare));
     
     // stop if the number of subset steps is too high, else results are not numerically defined anymore
-    if ( fabs( pow( probabilityEstimate, 2.) ) < SpecFunc::MinNumericalScalar )
+    if ( fabs( pow( probabilityEstimate, 2.) ) < SpecFunc::MinScalar )
       throw NotDefinedException(HERE) << "Probability estimate too low: " << probabilityEstimate;
 
     // compute variance estimate
@@ -287,7 +287,7 @@ void SubsetInverseSampling::run()
     {
       if ( getEvent().getOperator()( currentLevelSample_[i][0], currentThreshold ) )
       {
-        eventInputSample_.add( standardEvent_.getAntecedent()->getDistribution().getInverseIsoProbabilisticTransformation()(currentPointSample_[i]) );
+        eventInputSample_.add( standardEvent_.getAntecedent().getDistribution().getInverseIsoProbabilisticTransformation()(currentPointSample_[i]) );
         eventOutputSample_.add( currentLevelSample_[i] );
       }
     }
@@ -307,29 +307,29 @@ Sample SubsetInverseSampling::computeBlockSample()
 
 
 /* Compute the new threshold corresponding to the target failure probability */
-NumericalScalar SubsetInverseSampling::computeThreshold()
+Scalar SubsetInverseSampling::computeThreshold()
 {
   // compute the quantile according to the event operator
-  NumericalScalar ratio = getEvent().getOperator()(1.0, 2.0) ?  conditionalProbability_ : 1.0 - conditionalProbability_;
+  Scalar ratio = getEvent().getOperator()(1.0, 2.0) ?  conditionalProbability_ : 1.0 - conditionalProbability_;
   
-  NumericalScalar currentThreshold = currentLevelSample_.computeQuantile( ratio )[0];
+  Scalar currentThreshold = currentLevelSample_.computeQuantile( ratio )[0];
   
   return currentThreshold;
 }
 
 
-NumericalScalar SubsetInverseSampling::computeProbability(NumericalScalar probabilityEstimateFactor, NumericalScalar threshold)
+Scalar SubsetInverseSampling::computeProbability(Scalar probabilityEstimateFactor, Scalar threshold)
 {
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
   const UnsignedInteger blockSize = getBlockSize();
-  NumericalScalar probabilityEstimate = 0.0;
-  NumericalScalar varianceEstimate = 0.0;
+  Scalar probabilityEstimate = 0.0;
+  Scalar varianceEstimate = 0.0;
   
   for ( UnsignedInteger i = 0; i < maximumOuterSampling; ++ i )
   {
-    const NumericalScalar size = i + 1.0;
-    NumericalScalar meanBlock = 0.0;
-    NumericalScalar varianceBlock = 0.0;
+    const Scalar size = i + 1.0;
+    Scalar meanBlock = 0.0;
+    Scalar varianceBlock = 0.0;
     for ( UnsignedInteger j = 0 ; j < blockSize; ++ j )
     {
       if ( getEvent().getOperator()( currentLevelSample_[ i*blockSize+j ][0], threshold ) )
@@ -353,7 +353,7 @@ NumericalScalar SubsetInverseSampling::computeProbability(NumericalScalar probab
   }
   
   // cannot determine next subset domain if no variance
-  const NumericalScalar epsilon = ResourceMap::GetAsNumericalScalar( "SpecFunc-Precision" );
+  const Scalar epsilon = ResourceMap::GetAsScalar( "SpecFunc-Precision" );
   if ( fabs( varianceEstimate ) < epsilon )
     throw NotDefinedException(HERE) << "Null output variance";
                                           
@@ -362,7 +362,7 @@ NumericalScalar SubsetInverseSampling::computeProbability(NumericalScalar probab
 
 
 /* Sort new seeds */
-void SubsetInverseSampling::initializeSeed(NumericalScalar threshold)
+void SubsetInverseSampling::initializeSeed(Scalar threshold)
 {
   UnsignedInteger seedIndex = 0;
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
@@ -384,13 +384,13 @@ void SubsetInverseSampling::initializeSeed(NumericalScalar threshold)
 
 
 /* Compute the correlation on markov chains at the current state of the algorithm */
-NumericalScalar SubsetInverseSampling::computeVarianceGamma(NumericalScalar currentFailureProbability, NumericalScalar threshold)
+Scalar SubsetInverseSampling::computeVarianceGamma(Scalar currentFailureProbability, Scalar threshold)
 {
   const UnsignedInteger N = currentPointSample_.getSize();
   const UnsignedInteger Nc = std::max<UnsignedInteger>(1, conditionalProbability_ * N);
   Matrix IndicatorMatrice( Nc, N / Nc );
   Point correlationSequence( N / Nc - 1 );
-  NumericalScalar currentFailureProbability2 = pow( currentFailureProbability, 2. );
+  Scalar currentFailureProbability2 = pow( currentFailureProbability, 2. );
   for ( UnsignedInteger i = 0; i < N / Nc; ++ i )
   {
     for ( UnsignedInteger j = 0; j < Nc; ++ j )
@@ -410,9 +410,9 @@ NumericalScalar SubsetInverseSampling::computeVarianceGamma(NumericalScalar curr
     correlationSequence[k] /= 1.0 * N - 1.0 * (k + 1) * Nc;
     correlationSequence[k] -= currentFailureProbability2;
   }
-  const NumericalScalar R0 = currentFailureProbability * ( 1.0 - currentFailureProbability );
+  const Scalar R0 = currentFailureProbability * ( 1.0 - currentFailureProbability );
   Point rho = ((1.0 / R0) * correlationSequence);
-  NumericalScalar gamma = 0.0;
+  Scalar gamma = 0.0;
   for ( UnsignedInteger k = 0; k < N / Nc - 1; ++ k )
   {
     gamma += 2.0 * (1.0 - (k + 1) * 1.0 * Nc / N) * rho[k];
@@ -422,7 +422,7 @@ NumericalScalar SubsetInverseSampling::computeVarianceGamma(NumericalScalar curr
 
 
 /* Iterate one step of the algorithm */
-void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
+void SubsetInverseSampling::generatePoints(Scalar threshold)
 {  
   UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
   UnsignedInteger blockSize = getBlockSize();
@@ -451,7 +451,7 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
       for (UnsignedInteger k = 0; k < dimension_; ++ k)
       {
         // compute ratio
-        NumericalScalar ratio = std::min(1.0, exp(0.5 * (oldPoint[k] * oldPoint[k] - newPoint[k] * newPoint[k])));
+        Scalar ratio = std::min(1.0, exp(0.5 * (oldPoint[k] * oldPoint[k] - newPoint[k] * newPoint[k])));
 
         // accept new point with probability ratio
         if (ratio < uniform[k])
@@ -479,47 +479,47 @@ void SubsetInverseSampling::generatePoints(NumericalScalar threshold)
 
 
 /* Confidence Length of the threshold */
-NumericalScalar SubsetInverseSampling::getThresholdConfidenceLength(const NumericalScalar level) const
+Scalar SubsetInverseSampling::getThresholdConfidenceLength(const Scalar level) const
 {
-  NumericalScalar thresholdInf = thresholdDistribution_.computeQuantile((1 - level)/2)[0];
-  NumericalScalar thresholdSup = thresholdDistribution_.computeQuantile(1.-(1 - level)/2)[0];
-  return NumericalScalar (std::max(thresholdSup, thresholdInf) - std::min(thresholdSup, thresholdInf));
+  Scalar thresholdInf = thresholdDistribution_.computeQuantile((1 - level)/2)[0];
+  Scalar thresholdSup = thresholdDistribution_.computeQuantile(1.-(1 - level)/2)[0];
+  return Scalar (std::max(thresholdSup, thresholdInf) - std::min(thresholdSup, thresholdInf));
 }
 
 
 /* Markov parameter accessor */
-void SubsetInverseSampling::setProposalRange(NumericalScalar proposalRange)
+void SubsetInverseSampling::setProposalRange(Scalar proposalRange)
 {
   proposalRange_ = proposalRange;
 }
 
 
-NumericalScalar SubsetInverseSampling::getProposalRange() const
+Scalar SubsetInverseSampling::getProposalRange() const
 {
   return proposalRange_;
 }
 
 
 /* Ratio accessor */
-void SubsetInverseSampling::setConditionalProbability(NumericalScalar conditionalProbability)
+void SubsetInverseSampling::setConditionalProbability(Scalar conditionalProbability)
 {
   if ( (conditionalProbability <= 0.) || (conditionalProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
   conditionalProbability_ = conditionalProbability;
 }
 
-NumericalScalar SubsetInverseSampling::getConditionalProbability() const
+Scalar SubsetInverseSampling::getConditionalProbability() const
 {
   return conditionalProbability_;
 }
 
 /* target probability accessor */
-void SubsetInverseSampling::setTargetProbability(NumericalScalar targetProbability)
+void SubsetInverseSampling::setTargetProbability(Scalar targetProbability)
 {
   if ( (targetProbability <= 0.) || (targetProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
   targetProbability_ = targetProbability;
 }
 
-NumericalScalar SubsetInverseSampling::getTargetProbability() const
+Scalar SubsetInverseSampling::getTargetProbability() const
 {
   return targetProbability_;
 }
@@ -590,7 +590,7 @@ void SubsetInverseSampling::setISubset(OT::Bool iSubset)
   iSubset_ = iSubset;
 }
 
-void SubsetInverseSampling::setBetaMin(NumericalScalar betaMin)
+void SubsetInverseSampling::setBetaMin(Scalar betaMin)
 {
   if (betaMin <= 0.) throw InvalidArgumentException(HERE) << "Beta min should be positive";
   betaMin_ = betaMin;
