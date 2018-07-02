@@ -1,0 +1,23 @@
+FROM openturns/archlinux-mingw:latest
+MAINTAINER adumas
+
+ENV ARCH x86_64
+ENV WINEARCH win64
+ENV WINEPATH /usr/${ARCH}-w64-mingw32/bin
+ENV PYTHONHOME /usr/${ARCH}-w64-mingw32/
+ENV PYTHONPATH /usr/${ARCH}-w64-mingw32/lib/python27
+RUN /usr/${ARCH}-w64-mingw32/bin/python27.exe -V
+
+# openturns
+RUN git clone https://github.com/openturns/openturns.git /tmp/openturns && cd /tmp/openturns \
+  && git checkout 1.11 \
+  && CXXFLAGS="-D_hypot=hypot -D_GLIBCXX_ASSERTIONS" ${ARCH}-w64-mingw32-cmake \
+  -DUSE_SPHINX=OFF \
+  -DPYTHON_INCLUDE_DIR=/usr/${ARCH}-w64-mingw32/include/python27 \
+  -DPYTHON_LIBRARY=/usr/${ARCH}-w64-mingw32/lib/libpython27.dll.a \
+  -DPYTHON_EXECUTABLE=/usr/${ARCH}-w64-mingw32/bin/python27.exe \
+  -DPYTHON_SITE_PACKAGES=Lib/site-packages \
+  -DUSE_COTIRE=ON -DCOTIRE_MAXIMUM_NUMBER_OF_UNITY_INCLUDES="-j8" \
+  -DUSE_TBB=OFF \
+  -DCMAKE_INSTALL_PREFIX=$PWD/install . \
+  && make OT && make -j10 && sudo make install

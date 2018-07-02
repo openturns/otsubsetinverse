@@ -1,12 +1,36 @@
 stages:
   - docker_linux
+  - docker_mingw
+  - docker_mingw_tags
 
 run_linux:
   stage: docker_linux
   script:
-    - docker build -t otsubsetinverse .
+    - docker build -t docker/linux/otsubsetinverse .
     - docker run otsubsetinverse make check -j10
     - docker run otsubsetinverse make installcheck -j10
   tags:
     - calcul-5-shell 
 
+run_mingw:
+  stage : docker_mingw
+  script:
+    - docker build -f docker/mingw/dockerfile_mingw -t otsubsetinverse_mingw .
+    - docker run --rm --volume `pwd`:/tmp/otsubsetinverse otsubsetinverse_mingw sh -c "/tmp/otsubsetinverse/docker/mingw/run_docker_build.sh"
+  tags:
+    - calcul-5-shell
+  except:
+    - tags
+
+run_deploy_mingw:
+  stage : docker_mingw_tags
+  script:
+    - docker build -f docker/mingw/dockerfile_mingw -t otsubsetinverse_mingw .
+    - docker run --rm --volume `pwd`:/tmp/otsubsetinverse otsubsetinverse_mingw sh -c "/tmp/otsubsetinverse/docker/mingw/run_docker_build.sh `id -u` `id -g`"
+  tags:
+    - calcul-5-shell
+  artifacts:
+    paths:
+    - otsubsetinverse-*.exe
+  only:
+    - tags
