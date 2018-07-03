@@ -22,19 +22,22 @@ export MAKEFLAGS="-j8"
 
 mkdir /tmp/build_otsubsetinverse && cd /tmp/build_otsubsetinverse
 MOD_PREFIX=$PWD/install
+MOD_PREFIX=${MINGW_PREFIX}
 CXXFLAGS="-D_hypot=hypot -D_GLIBCXX_ASSERTIONS" ${ARCH}-w64-mingw32-cmake -DUSE_SPHINX=OFF \
   -DCMAKE_INSTALL_PREFIX=${MOD_PREFIX} \
-  -DPYTHON_INCLUDE_DIR=/usr/${ARCH}-w64-mingw32/include/python27 \
-  -DPYTHON_LIBRARY=/usr/${ARCH}-w64-mingw32/lib/libpython27.dll.a \
-  -DPYTHON_EXECUTABLE=/usr/${ARCH}-w64-mingw32/bin/python27.exe ../otsubsetinverse \
-  -DPYTHON_SITE_PACKAGES=Lib/site-packages
+  -DPYTHON_INCLUDE_DIR=/usr/${ARCH}-w64-mingw32/include/python${PYBASEVER_NODOT} \
+  -DPYTHON_LIBRARY=/usr/${ARCH}-w64-mingw32/lib/libpython${PYBASEVER_NODOT}.dll.a \
+  -DPYTHON_EXECUTABLE=/usr/${ARCH}-w64-mingw32/bin/python${PYBASEVER_NODOT}.exe \
+  -DPYTHON_SITE_PACKAGES=Lib/site-packages \
+  -DUSE_COTIRE=ON -DCOTIRE_MAXIMUM_NUMBER_OF_UNITY_INCLUDES="-j8" ../otsubsetinverse
 
 make -j10
 make install
 make tests
 
-cp ${MINGW_PREFIX}/bin/*.dll ${MOD_PREFIX}/bin
-make test
+# need some copies if install directory is not ${MINGW_PREFIX}
+# cp ${MINGW_PREFIX}/bin/*.dll ${MOD_PREFIX}/bin
+ctest  --output-on-failure --timeout 100 -j8
 
 VERSION=`cat ../otsubsetinverse/VERSION`
 cp /tmp/otsubsetinverse/distro/windows/* .
