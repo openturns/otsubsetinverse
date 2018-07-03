@@ -32,6 +32,7 @@ CXXFLAGS="-D_hypot=hypot -D_GLIBCXX_ASSERTIONS" ${ARCH}-w64-mingw32-cmake -DUSE_
 make -j10
 make install
 make tests
+make test
 
 cp ${MINGW_PREFIX}/bin/*.dll ${MOD_PREFIX}/bin
 VERSION=`cat ../otsubsetinverse/VERSION`
