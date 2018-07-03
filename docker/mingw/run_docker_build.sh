@@ -31,8 +31,9 @@ CXXFLAGS="-D_hypot=hypot -D_GLIBCXX_ASSERTIONS" ${ARCH}-w64-mingw32-cmake -DUSE_
   -DPYTHON_SITE_PACKAGES=Lib/site-packages \
   -DUSE_COTIRE=ON -DCOTIRE_MAXIMUM_NUMBER_OF_UNITY_INCLUDES="-j8" ../otsubsetinverse
 
-make -j10
-make install
+sudo make install -j10
+sudo ${ARCH}-w64-mingw32-strip --strip-unneeded ${MOD_PREFIX}/bin/*.dll
+sudo ${ARCH}-w64-mingw32-strip --strip-unneeded ${MOD_PREFIX}/Lib/site-packages/otsubsetinverse/*.pyd
 make tests
 
 # need some copies if install directory is not ${MINGW_PREFIX}
