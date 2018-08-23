@@ -7,8 +7,8 @@ run_linux:
   stage: docker_linux
   script:
     - docker build -f docker/linux/dockerfile_linux -t otsubsetinverse .
-    - docker run otsubsetinverse make check -j10
-    - docker run otsubsetinverse make installcheck -j10
+    - docker run --rm otsubsetinverse make check -j10
+    - docker run --rm otsubsetinverse make installcheck -j10
   tags:
     - calcul-5-shell 
 

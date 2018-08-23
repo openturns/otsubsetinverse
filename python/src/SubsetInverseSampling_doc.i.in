@@ -73,10 +73,10 @@ Examples
 
 Create a performance function with an associated distribution.
 
->>> limitState = ot.NumericalMathFunction(['u1', 'u2'], ['g'], ['u1-u2'])
+>>> limitState = ot.SymbolicFunction(['u1', 'u2'], ['u1-u2'])
 >>> dim = limitState.getInputDimension()
->>> mean = ot.NumericalPoint([7., 2.])
->>> sigma = ot.NumericalPoint(dim, 1.0)
+>>> mean = ot.Point([7., 2.])
+>>> sigma = ot.Point(dim, 1.0)
 >>> R = ot.IdentityMatrix(dim)
 >>> myDistribution = ot.Normal(mean, sigma, R)
 >>> vect = ot.RandomVector(myDistribution)
@@ -115,7 +115,7 @@ openturns.Simulation"
 
 Returns
 -------
-coef : `~openturns.NumericalPoint`
+coef : :py:class:`openturns.Point`
     Coefficient of variation at each subset step."
 
 // ---------------------------------------------------------------------------
@@ -125,7 +125,7 @@ coef : `~openturns.NumericalPoint`
 
 Returns
 -------
-coef : `~openturns.NumericalPoint`
+coef : :py:class:`openturns.Point`
     Coefficient of variation at each subset step."
 // ---------------------------------------------------------------------------
 
@@ -207,7 +207,7 @@ prob : bool
 
 Returns
 -------
-inputSample : `~openturns.NumericalSample`
+inputSample : :py:class:`openturns.Sample`
     Input sample."
 
 // ---------------------------------------------------------------------------
@@ -217,7 +217,7 @@ inputSample : `~openturns.NumericalSample`
 
 Returns
 -------
-outputSample : `~openturns.NumericalSample`
+outputSample : :py:class:`openturns.Sample`
     Ouput sample."
 
 // ---------------------------------------------------------------------------
@@ -227,7 +227,7 @@ outputSample : `~openturns.NumericalSample`
 
 Returns
 -------
-inputSample : `~openturns.NumericalSample`
+inputSample : :py:class:`openturns.Sample`
     Input sample."
 
 // ---------------------------------------------------------------------------
@@ -237,7 +237,7 @@ inputSample : `~openturns.NumericalSample`
 
 Returns
 -------
-outputSample : `~openturns.NumericalSample`
+outputSample : :py:class:`openturns.Sample`
     Output sample."
 
 // ---------------------------------------------------------------------------
@@ -247,7 +247,7 @@ outputSample : `~openturns.NumericalSample`
 
 Returns
 -------
-threshold : `~openturns.NumericalPoint`
+threshold : :py:class:`openturns.Point`
     Threshold values."
 
 // ---------------------------------------------------------------------------
@@ -257,7 +257,7 @@ threshold : `~openturns.NumericalPoint`
 
 Returns
 -------
-prob : `~openturns.NumericalPoint`
+prob : :py:class:`openturns.Point`
     Autocorrelation values."
 
 // ---------------------------------------------------------------------------
@@ -267,7 +267,7 @@ prob : `~openturns.NumericalPoint`
 
 Returns
 -------
-prob : `~openturns.NumericalPoint`
+prob : :py:class:`openturns.Point`
     Probability estimate values."
 
 // ---------------------------------------------------------------------------

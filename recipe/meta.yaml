@@ -1,20 +1,21 @@
 package:
   name: otsubsetinverse
-  version: 1.0
+  version: 1.1
 
 source:
   path: ../
 
 build:
-  number: 3
+  number: 1
 
 requirements:
   build:
+    - gcc
     - toolchain
     - python
     - cmake  # [not win]
     - swig  # [not win]
-    - openturns 1.9  # [not win]
+    - openturns 1.11  # [not win]
 
   run:
     - python

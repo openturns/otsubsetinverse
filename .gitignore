@@ -2,3 +2,4 @@ build*/
 *~
 distro/windows/mod*
 *.exe
+install*
