@@ -1,3 +1,5 @@
+.. image:: https://travis-ci.org/adumasphi/otsubsetinverse.svg?branch=master
+    :target: https://travis-ci.org/adumasphi/otsubsetinverse
 
 OTSubsetInverse Module
 ======================
