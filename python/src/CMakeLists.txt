@@ -12,8 +12,9 @@ macro ( ot_add_python_module MODULENAME SOURCEFILE )
   set_source_files_properties ( ${SOURCEFILE} PROPERTIES CPLUSPLUS ON )
   set_source_files_properties ( ${SOURCEFILE} PROPERTIES SWIG_MODULE_NAME ${MODULENAME} )
   ot_install_swig_file ( ${SOURCEFILE} )
-  if ( ${ARGC} GREATER 2 )
-    set ( SWIG_MODULE_${MODULENAME}_EXTRA_DEPS ${ARGN} )
+  if (${ARGC} GREATER 2)
+    set (SWIG_MODULE_${MODULENAME}_EXTRA_DEPS ${ARGN})
+    list (APPEND SWIG_MODULE_${MODULENAME}_EXTRA_DEPS generate_docstrings)
   endif ()
 
   set ( swig_other_sources )
@@ -34,9 +35,14 @@ macro ( ot_add_python_module MODULENAME SOURCEFILE )
     endif ()
   endforeach ()
 
-  swig_add_module ( ${MODULENAME} python ${SOURCEFILE} ${swig_other_sources} )
-  add_dependencies ( ${SWIG_MODULE_${MODULENAME}_REAL_NAME} generate_docstrings )
-  swig_link_libraries ( ${MODULENAME} otsubsetinverse )
+  # swig_add_module is deprecated
+  if (CMAKE_VERSION VERSION_LESS 3.8)
+    swig_add_module (${MODULENAME} python ${SOURCEFILE} ${swig_other_sources} )
+  else ()
+    swig_add_library (${MODULENAME} LANGUAGE python SOURCES ${SOURCEFILE} ${swig_other_sources})
+  endif ()
+
+  swig_link_libraries (${MODULENAME} otsubsetinverse)
   if ( LINK_PYTHON_LIBRARY )
     swig_link_libraries ( ${MODULENAME} ${PYTHON_LIBRARIES} )
   endif ()
@@ -74,7 +80,7 @@ install ( FILES ${SWIGFILES}
 
 
 
-if (SPHINX_FOUND AND SPHINX_EXECUTABLE)
+if (SPHINX_FOUND)
 
   # create a build site-package from which sphinx can import
   set (OTSUBSETINVERSE_PYTHON_BUILD_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR}/site-packages)
@@ -164,6 +170,7 @@ if (SPHINX_FOUND AND SPHINX_EXECUTABLE)
     add_custom_target ( sphinx_${format}
                         COMMAND ${SPHINX_EXECUTABLE}
                                   -b ${format}
+                                  -d ${SPHINX_BINARY_DIR}/.doctrees
                                   ${SPHINX_FLAGS}
                                   ${SPHINX_BINARY_DIR}
                                   ${SPHINX_BINARY_DIR}/${format}
