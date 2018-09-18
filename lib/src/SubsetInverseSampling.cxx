@@ -111,8 +111,10 @@ void SubsetInverseSampling::run()
   Scalar currentCoVsquare = 0.0;
   Scalar varianceEstimate = 0.0;
   Scalar coefficientOfVariationSquare = 0.0;
+  Scalar tempCoefficientOfVariation = 0.0;
   Scalar thresholdVariance = 0.0;
   Scalar thresholdCoefficientOfVariationSquare = 0.0;
+  Scalar gamma = 0.0;
 
   // allocate input/output samples
   const UnsignedInteger maximumOuterSampling = getMaximumOuterSampling();
@@ -219,8 +221,13 @@ void SubsetInverseSampling::run()
     // update probability estimate
     probabilityEstimate *= currentProbabilityEstimate;
 
-    // update stopping criterion
-    stop = targetProbability_ >= probabilityEstimate;
+    // update coefficient of variation 
+    gamma = computeVarianceGamma( currentProbabilityEstimate, currentThreshold );
+    currentCoVsquare = (1.0 - currentProbabilityEstimate) / (currentProbabilityEstimate * currentLevelSample_.getSize() * 1.0);
+    tempCoefficientOfVariation = sqrt(coefficientOfVariationSquare + (1.0 + gamma) * currentCoVsquare);
+
+    // update stopping criterion : target proba > inf bound of confidence interval of pf
+    stop = targetProbability_ >= probabilityEstimate * (1 - tempCoefficientOfVariation * DistFunc::qNormal(0.95)) ;
 
     if (stop)
     {
@@ -245,7 +252,7 @@ void SubsetInverseSampling::run()
     }
 
     // update coefficient of variation 
-    Scalar gamma = computeVarianceGamma( currentProbabilityEstimate, currentThreshold );
+    gamma = computeVarianceGamma( currentProbabilityEstimate, currentThreshold );
     currentCoVsquare = (1.0 - currentProbabilityEstimate) / (currentProbabilityEstimate * currentLevelSample_.getSize() * 1.0);
     coefficientOfVariationSquare += (1.0 + gamma) * currentCoVsquare;
     // update threshold coefficient of variation
@@ -503,7 +510,7 @@ Scalar SubsetInverseSampling::getProposalRange() const
 /* Ratio accessor */
 void SubsetInverseSampling::setConditionalProbability(Scalar conditionalProbability)
 {
-  if ( (conditionalProbability <= 0.) || (conditionalProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
+  if ( (conditionalProbability <= 0.) || (conditionalProbability >= 1.) ) throw InvalidArgumentException(HERE) << "In setConditionalProbability::Probability should be in (0, 1)";
   conditionalProbability_ = conditionalProbability;
 }
 
@@ -515,7 +522,7 @@ Scalar SubsetInverseSampling::getConditionalProbability() const
 /* target probability accessor */
 void SubsetInverseSampling::setTargetProbability(Scalar targetProbability)
 {
-  if ( (targetProbability <= 0.) || (targetProbability >= 1.) ) throw InvalidArgumentException(HERE) << "Probability should be in (0, 1)";
+  if ( (targetProbability <= 0.) || (targetProbability >= 1.) ) throw InvalidArgumentException(HERE) << "In setTargetProbability::Probability should be in (0, 1)";
   targetProbability_ = targetProbability;
 }
 
