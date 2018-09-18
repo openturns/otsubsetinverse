@@ -32,3 +32,8 @@ after_success:
   - git add -A .
   - git commit -a -m "Travis build ${PROJECT_REPONAME} ${TRAVIS_BUILD_NUMBER}"
   - git push --quiet origin master > /dev/null 2>&1
+
+env:
+  global:
+    secure: "E/JpsW8RufcemS/jKAlhphUh8IbAWfnjcAUKKmEZnrgYS32JXqsm8yeBDQhMo+TnWJxKkYKA0o49EzDUKMZHXlJtU2TB/rkuPN/QGYCOyfk4X1tm7I9hb6kmUKuWWC3POj7D1ENVsZr6dQSUzhzQ6sbDTQno5SLAAvfjDCzoii3QwTa9SRH3mV9XUCnehrB8/io+3dFvxYenNbtHOIxwZV/F6NVX6W+9HI2tl6RAzdP9GeH5s5Y6gU0AuM4hBnLQxAMF4r/RatE4/WkCDdbqULqCLfIm7TKcJaj/4euyuKRbS4PETsrhJQxHfjRFFNSmICpQd37TTSrQBGCVukWZJzz3eI/vNhFP8a1Z5HGS7OLDU2W14gp1011b9GjbuuCwe3K8OHngbgwXHmvQEHFnNHMP0zuAdZD8xk7W/N9JhUZ3bYWJE18fPj0MLumqvIA+5SS2zobuFE4yg3G3xR76uoNjeZmq0m1Nez9AEZdFoqNZbJ6BSwJpd55t+ED0pAcEbu8iKXe7W2urS/44+IWVbKxKyFvr3pu/rSoaopKCfxevFAooH+ajb+IaFUx5kAVGflahjSzlkPFY8k1misSaFiOvquEW4bZwNtAuWW5dJkO2D2lLaaLc1hNRYiMsMu2ese0+gti/qp9PMrJGozlyjMEsdCnnyz07M4nK17MHouA="
+
