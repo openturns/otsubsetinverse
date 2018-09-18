@@ -1,4 +1,4 @@
-cmake_minimum_required ( VERSION 2.8 )
+cmake_minimum_required (VERSION 2.8.4)
 
 option ( BUILD_PYTHON                 "Build the python module for the library"                               ON )
 option (USE_SPHINX                    "Use sphinx for documentation"                                          ON)
@@ -48,6 +48,7 @@ if ( BUILD_PYTHON )
       set ( SWIG_FOUND TRUE )
     endif ()
   endif ()
+
   find_package ( PythonInterp )
   find_package ( PythonLibs )
   include (FindPythonModule)
