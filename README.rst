@@ -1,10 +1,10 @@
-.. image:: https://travis-ci.org/adumasphi/otsubsetinverse.svg?branch=master
-    :target: https://travis-ci.org/adumasphi/otsubsetinverse
+.. image:: https://travis-ci.org/openturns/otsubsetinverse.svg?branch=master
+    :target: https://travis-ci.org/openturns/otsubsetinverse
 
 OTSubsetInverse Module
 ======================
 
-The goal of the module is to compute the performance of a function (threhold value) for a given target probability. The technique uses the subset sampling in the same way as in the original.
+The goal of the module is to compute the performance of a function (threshold value) for a given target probability. The technique uses the subset sampling in the same way as in the original.
 
 Compilation
 ===========
