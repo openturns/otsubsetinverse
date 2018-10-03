@@ -70,7 +70,8 @@ myEvent = Event(output, ComparisonOperator(Less()), threshold)
 bs = 1
 
 # Monte Carlo
-myMC = MonteCarlo(myEvent)
+experiment = MonteCarloExperiment()
+myMC = ProbabilitySimulationAlgorithm(myEvent, experiment)
 myMC.setMaximumOuterSampling(int(1e6)// bs)
 myMC.setBlockSize(bs)
 myMC.setMaximumCoefficientOfVariation(-1.0)
