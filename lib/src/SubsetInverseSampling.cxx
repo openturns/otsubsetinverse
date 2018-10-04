@@ -18,8 +18,18 @@
  *  along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include <openturns/TruncatedDistribution.hxx>
+#include <openturns/KernelSmoothing.hxx>
+#include <openturns/Normal.hxx>
+#include <openturns/ChiSquare.hxx>
+#include <openturns/ComposedDistribution.hxx>
+#include <openturns/SpecFunc.hxx>
+#include <openturns/DistFunc.hxx>
+#include <openturns/Uniform.hxx>
+#include <openturns/RandomGenerator.hxx>
+#include <openturns/PersistentObjectFactory.hxx>
 #include "otsubsetinverse/SubsetInverseSampling.hxx"
-#include "otsubsetinverse/SubsetInverseSamplingResult.hxx"
+
 
 using namespace OT;
 
@@ -38,7 +48,7 @@ const Scalar SubsetInverseSampling::DefaultBetaMin = 2.0;
 
 /* Default constructor */
 SubsetInverseSampling::SubsetInverseSampling()
-: Simulation()
+: SimulationAlgorithm()
 , proposalRange_(0.)
 , conditionalProbability_(0.)
 , iSubset_(false)
@@ -55,7 +65,8 @@ SubsetInverseSampling::SubsetInverseSampling(const Event & event,
                                const Scalar targetProbability,
                                const Scalar proposalRange,
                                const Scalar conditionalProbability)
-: Simulation(event)
+: SimulationAlgorithm()
+, event_(event)
 , proposalRange_(proposalRange)
 , conditionalProbability_(conditionalProbability)
 , iSubset_(false)
@@ -96,7 +107,7 @@ void SubsetInverseSampling::run()
 
   dimension_ = getEvent().getAntecedent().getDimension();
 
-  if ( getMaximumCoefficientOfVariation() != ResourceMap::GetAsScalar( "Simulation-DefaultMaximumCoefficientOfVariation" ) )
+  if ( getMaximumCoefficientOfVariation() != ResourceMap::GetAsScalar( "SimulationAlgorithm-DefaultMaximumCoefficientOfVariation" ) )
     Log::Warn(OSS() << "The maximum coefficient of variation was set. It won't be used as termination criteria.");
 
   if ( conditionalProbability_ * getMaximumOuterSampling() * getBlockSize() < 1 )
@@ -603,15 +614,28 @@ void SubsetInverseSampling::setBetaMin(Scalar betaMin)
   betaMin_ = betaMin;
 }
 
+Event SubsetInverseSampling::getEvent() const
+{
+  return event_;
+}
 
+void SubsetInverseSampling::setResult(const SubsetInverseSamplingResult & result)
+{
+  result_ = result;
+}
 
+SubsetInverseSamplingResult SubsetInverseSampling::getResult() const
+{
+  return result_;
+}
 
 /* String converter */
 String SubsetInverseSampling::__repr__() const
 {
   OSS oss;
   oss << "class=" << getClassName()
-      << " derived from " << Simulation::__repr__()
+      << " derived from " << SimulationAlgorithm::__repr__()
+      << " event=" << event_
       << " targetProbability=" << targetProbability_
       << " proposalRange=" << proposalRange_
       << " conditionalProbability=" << conditionalProbability_
@@ -623,7 +647,7 @@ String SubsetInverseSampling::__repr__() const
 /* Method save() stores the object through the StorageManager */
 void SubsetInverseSampling::save(Advocate & adv) const
 {
-  Simulation::save(adv);
+  SimulationAlgorithm::save(adv);
   adv.saveAttribute("targetProbability", targetProbability_);
   adv.saveAttribute("proposalRange_", proposalRange_);
   adv.saveAttribute("conditionalProbability_", conditionalProbability_);
@@ -642,7 +666,7 @@ void SubsetInverseSampling::save(Advocate & adv) const
 /* Method load() reloads the object from the StorageManager */
 void SubsetInverseSampling::load(Advocate & adv)
 {
-  Simulation::load(adv);
+  SimulationAlgorithm::load(adv);
   adv.loadAttribute("targetProbability", targetProbability_);
   adv.loadAttribute("proposalRange_", proposalRange_);
   adv.loadAttribute("conditionalProbability_", conditionalProbability_);

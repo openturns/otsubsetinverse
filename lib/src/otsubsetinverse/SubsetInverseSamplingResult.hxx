@@ -21,14 +21,14 @@
 #ifndef OTSUBSETINVERSE_SUBSETINVERSESAMPLINGRESULT_HXX
 #define OTSUBSETINVERSE_SUBSETINVERSESAMPLINGRESULT_HXX
 
-#include <openturns/OT.hxx>
+#include <openturns/ProbabilitySimulationResult.hxx>
 #include "otsubsetinverse/OTSubsetInverseprivate.hxx"
 
 namespace OTSubsetInverse
 {
 
 class OTSUBSETINVERSE_API SubsetInverseSamplingResult
-: public OT::SimulationResultImplementation
+: public OT::ProbabilitySimulationResult
 {
   CLASSNAME;
 public:

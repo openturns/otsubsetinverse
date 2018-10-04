@@ -21,19 +21,16 @@
 #ifndef OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX
 #define OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX
 
-// #include <OT.hxx>
-#include <openturns/Simulation.hxx>
+#include <openturns/SimulationAlgorithm.hxx>
 #include <openturns/StandardEvent.hxx>
-#include "otsubsetinverse/OTSubsetInverseprivate.hxx"
-#include "openturns/Collection.hxx"
-#include "openturns/PersistentCollection.hxx"
+#include "otsubsetinverse/SubsetInverseSamplingResult.hxx"
 
 namespace OTSubsetInverse
 {
 
 
 class OTSUBSETINVERSE_API SubsetInverseSampling
-: public OT::Simulation
+: public OT::SimulationAlgorithm
 {
 CLASSNAME
 public:
@@ -59,6 +56,12 @@ public:
 
   /** Virtual constructor */
   virtual SubsetInverseSampling * clone() const;
+
+  /** Event accessor */
+  OT::Event getEvent() const;
+
+  /** Result accessor */
+  SubsetInverseSamplingResult getResult() const;
 
   /** The range of the uniform proposal pdf */
   void setProposalRange(OT::Scalar proposalRange);
@@ -112,6 +115,9 @@ public:
   virtual void load(OT::Advocate & adv);
 
 private:
+  /** Result accessor */
+  void setResult(const SubsetInverseSamplingResult & result);
+
   /** Compute the block sample */
   OT::Sample computeBlockSample();
 
@@ -129,6 +135,12 @@ private:
 
   /** Generate new points in the conditional failure domain */
   void generatePoints(OT::Scalar threshold);
+
+  // The event we are computing the probability of
+  OT::Event event_;
+
+  // The result
+  SubsetInverseSamplingResult result_;
 
   // some parameters
   OT::Scalar proposalRange_;// width of the proposal pdf

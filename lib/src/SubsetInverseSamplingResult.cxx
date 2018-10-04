@@ -18,6 +18,7 @@
  *  along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include <openturns/PersistentObjectFactory.hxx>
 #include "otsubsetinverse/SubsetInverseSamplingResult.hxx"
 
 using namespace OT;
@@ -36,7 +37,7 @@ static Factory<SubsetInverseSamplingResult> Factory_SubsetInverseSamplingResult;
 
 /* Default constructor */
 SubsetInverseSamplingResult::SubsetInverseSamplingResult()
-: SimulationResultImplementation()
+: ProbabilitySimulationResult()
 {
 }
 
@@ -49,7 +50,7 @@ SubsetInverseSamplingResult::SubsetInverseSamplingResult(const Event & event,
   const UnsignedInteger blockSize,
   const Scalar coefficientOfVariation,
   const Scalar threshold)
-: SimulationResultImplementation(event, probabilityEstimate, varianceEstimate, outerSampling, blockSize),
+: ProbabilitySimulationResult(event, probabilityEstimate, varianceEstimate, outerSampling, blockSize),
   coefficientOfVariation_(coefficientOfVariation),
   threshold_(threshold)
 {
@@ -73,7 +74,7 @@ Scalar SubsetInverseSamplingResult::getCoefficientOfVariation() const
 String SubsetInverseSamplingResult::__repr__() const
 {
   OSS oss;
-  oss << SimulationResultImplementation::__repr__();
+  oss << ProbabilitySimulationResult::__repr__();
   oss << " threshold=" << threshold_;
   return oss;
 }
@@ -82,7 +83,7 @@ String SubsetInverseSamplingResult::__repr__() const
 /* Method save() stores the object through the StorageManager */
 void SubsetInverseSamplingResult::save(Advocate & adv) const
 {
-  SimulationResultImplementation::save(adv);
+  ProbabilitySimulationResult::save(adv);
   adv.saveAttribute("coefficientOfVariation_", coefficientOfVariation_);
 }
 
@@ -90,7 +91,7 @@ void SubsetInverseSamplingResult::save(Advocate & adv) const
 /* Method load() reloads the object from the StorageManager */
 void SubsetInverseSamplingResult::load(Advocate & adv)
 {
-  SimulationResultImplementation::load(adv);
+  ProbabilitySimulationResult::load(adv);
   adv.loadAttribute("coefficientOfVariation_", coefficientOfVariation_);
 }
 
