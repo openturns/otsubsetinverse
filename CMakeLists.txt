@@ -69,19 +69,27 @@ if (BUILD_PYTHON)
   endif ()
 
   if ( PYTHONINTERP_FOUND )
-    execute_process ( COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print(sysconfig.get_python_lib(plat_specific=True, prefix='${CMAKE_INSTALL_PREFIX}'))"
-                      OUTPUT_VARIABLE _ABS_PYTHON_MODULE_PATH
-                      RESULT_VARIABLE _PYTHON_pythonlib_result 
-                      OUTPUT_STRIP_TRAILING_WHITESPACE )
-
-    if (NOT _PYTHON_pythonlib_result) 
-      get_filename_component ( _ABS_PYTHON_MODULE_PATH ${_ABS_PYTHON_MODULE_PATH} ABSOLUTE )
-      file ( RELATIVE_PATH _REL_PYTHON_MODULE_PATH ${CMAKE_INSTALL_PREFIX} ${_ABS_PYTHON_MODULE_PATH} )                   
-
-      set (OTSUBSETINVERSE_PYTHON_MODULE_PATH ${_REL_PYTHON_MODULE_PATH})
+    if (DEFINED PYTHON_SITE_PACKAGES)
+      set (OTSUBSETINVERSE_PYTHON_MODULE_PATH ${PYTHON_SITE_PACKAGES})
 
     else ()
-      message ( SEND_ERROR "Could not run ${PYTHON_EXECUTABLE}" ) 
+      execute_process ( COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print(sysconfig.get_python_lib(plat_specific=True, prefix='${CMAKE_INSTALL_PREFIX}'))"
+                        OUTPUT_VARIABLE _ABS_PYTHON_MODULE_PATH
+                        RESULT_VARIABLE _PYTHON_pythonlib_result
+                        OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+      if (_PYTHON_pythonlib_result)
+        message (SEND_ERROR "Could not run ${PYTHON_EXECUTABLE}")
+      endif ()
+
+      get_filename_component (_ABS_PYTHON_MODULE_PATH ${_ABS_PYTHON_MODULE_PATH} ABSOLUTE)
+      file (RELATIVE_PATH OTSUBSETINVERSE_PYTHON_MODULE_PATH ${CMAKE_INSTALL_PREFIX} ${_ABS_PYTHON_MODULE_PATH})
+    endif ()
+
+    if (IS_ABSOLUTE ${OTSUBSETINVERSE_PYTHON_MODULE_PATH})
+      set (PYTHON_MODULE_PATH ${OTSUBSETINVERSE_PYTHON_MODULE_PATH})
+    else ()
+      set (PYTHON_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/${OTSUBSETINVERSE_PYTHON_MODULE_PATH})
     endif ()
 
     if (CMAKE_VERSION VERSION_LESS "2.8.6")
@@ -94,17 +102,20 @@ if (BUILD_PYTHON)
 endif ()
 
 
-# WARNING: This is where variables without OTSUBSETINVERSE_ prefix are defined !
+# Define variables without OTSUBSETINVERSE_ prefix with absolute paths
 foreach (_var PYTHON_MODULE_PATH LIBRARY_PATH INCLUDE_PATH CONFIG_CMAKE_PATH)
-  file (TO_NATIVE_PATH "${OTSUBSETINVERSE_${_var}}" NATIVE_OTSUBSETINVERSE_${_var})
-  if (NOT IS_ABSOLUTE ${NATIVE_OTSUBSETINVERSE_${_var}})
-    file (TO_NATIVE_PATH ${CMAKE_INSTALL_PREFIX}/${OTSUBSETINVERSE_${_var}} NATIVE_OTSUBSETINVERSE_${_var})
+  if (IS_ABSOLUTE "${OTSUBSETINVERSE_${_var}}")
+    set (${_var} ${OTSUBSETINVERSE_${_var}})
+  else ()
+    set (${_var} ${CMAKE_INSTALL_PREFIX}/${OTSUBSETINVERSE_${_var}})
   endif ()
-  string (REPLACE "\\" "\\\\" ${_var} ${NATIVE_OTSUBSETINVERSE_${_var}})
+  get_filename_component (${_var} "${${_var}}" ABSOLUTE)
+  file (TO_NATIVE_PATH "${${_var}}" NATIVE_${_var})
+  string (REPLACE "\\" "\\\\" NATIVE_${_var} ${NATIVE_${_var}})
 endforeach ()
 
 # RPATH settings
-set (CMAKE_INSTALL_RPATH ${LIBRARY_PATH} ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES})
+set (CMAKE_INSTALL_RPATH ${LIBRARY_PATH})
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 if(POLICY CMP0042)
   # Set MACOSX_RPATH to ON
