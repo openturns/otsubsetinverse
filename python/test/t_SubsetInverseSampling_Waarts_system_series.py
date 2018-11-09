@@ -59,7 +59,7 @@ start = myDistribution.getMean()
 
 vect = RandomVector(myDistribution)
 
-output = RandomVector(limitState, vect)
+output = CompositeRandomVector(limitState, vect)
 
 threshold = 0.0
 myEvent = Event(output, ComparisonOperator(Less()), threshold)
