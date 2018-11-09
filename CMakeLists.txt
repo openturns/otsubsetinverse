@@ -1,17 +1,15 @@
-cmake_minimum_required (VERSION 2.8.4)
+cmake_minimum_required (VERSION 2.8.8)
 
-option ( BUILD_PYTHON                 "Build the python module for the library"                               ON )
-option (USE_SPHINX                    "Use sphinx for documentation"                                          ON)
-option ( LINK_PYTHON_LIBRARY          "Link python modules against python library"                            ON )
-option ( INSTALL_TESTS                "Install compiled tests for native platform testing"                    OFF )
-option ( BUILD_SHARED_LIBS            "Build shared libraries"                                                ON )
+option (BUILD_PYTHON                 "Build the python module for the library"                               ON)
+option (USE_SPHINX                   "Use sphinx for documentation"                                          ON)
+option (BUILD_SHARED_LIBS            "Build shared libraries"                                                ON)
 
 # By default, build in Release mode. Must appear before project() command
 if ( NOT DEFINED CMAKE_BUILD_TYPE )
    set( CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
 endif ()
 
-project ( OTSubsetInverse CXX )
+project (OTSubsetInverse)
 
 string ( TOLOWER ${CMAKE_PROJECT_NAME} PACKAGE_NAME )
 
@@ -29,10 +27,10 @@ add_definitions ( ${OTSUBSETINVERSE_DEFINITIONS} )
 
 set ( OTSUBSETINVERSE_LIBRARY_PATH lib${LIB_SUFFIX} )
 set ( OTSUBSETINVERSE_INCLUDE_PATH include)
-set ( OTSUBSETINVERSE_SWIG_INCLUDE_PATH ${OTSUBSETINVERSE_INCLUDE_PATH}/${PACKAGE_NAME}/swig )
+set ( OTSUBSETINVERSE_SWIG_INCLUDE_DIRS ${OTSUBSETINVERSE_INCLUDE_PATH}/${PACKAGE_NAME}/swig )
 set ( OTSUBSETINVERSE_DATA_PATH share )
 set ( OTSUBSETINVERSE_EXAMPLE_PATH ${OTSUBSETINVERSE_DATA_PATH}/${PACKAGE_NAME}/examples )
-set ( OTSUBSETINVERSE_CONFIG_CMAKE_PATH lib${LIB_SUFFIX}/cmake/otsubsetinverse )
+set ( OTSUBSETINVERSE_CONFIG_CMAKE_PATH lib${LIB_SUFFIX}/cmake/ottemplate )
 set (OTSUBSETINVERSE_DOC_PATH share/${PACKAGE_NAME}/doc)
 
 if (BUILD_PYTHON)
@@ -47,12 +45,9 @@ if (BUILD_PYTHON)
     # we need absolute module imports
     find_package (SWIG 2.0.9)
   endif ()
-  if (SWIG_FOUND)
-    include (${SWIG_USE_FILE})
-  endif ()
 
-  find_package ( PythonInterp )
-  find_package ( PythonLibs )
+  find_package (PythonInterp)
+  find_package (PythonLibs)
   include (FindPythonModule)
 
   if (USE_SPHINX)
@@ -68,7 +63,7 @@ if (BUILD_PYTHON)
     endif ()
   endif ()
 
-  if ( PYTHONINTERP_FOUND )
+  if (PYTHONINTERP_FOUND)
     if (DEFINED PYTHON_SITE_PACKAGES)
       set (OTSUBSETINVERSE_PYTHON_MODULE_PATH ${PYTHON_SITE_PACKAGES})
 
@@ -92,11 +87,6 @@ if (BUILD_PYTHON)
       set (PYTHON_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/${OTSUBSETINVERSE_PYTHON_MODULE_PATH})
     endif ()
 
-    if (CMAKE_VERSION VERSION_LESS "2.8.6")
-      execute_process (COMMAND ${PYTHON_EXECUTABLE} -c "import sys; print(sys.version_info[0])"
-                       OUTPUT_VARIABLE PYTHON_VERSION_MAJOR
-                       OUTPUT_STRIP_TRAILING_WHITESPACE)
-    endif ()
     set (OTSUBSETINVERSE_PYTHON${PYTHON_VERSION_MAJOR}_MODULE_PATH ${OTSUBSETINVERSE_PYTHON_MODULE_PATH})
   endif ( PYTHONINTERP_FOUND )
 endif ()
@@ -120,6 +110,10 @@ set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 if(POLICY CMP0042)
   # Set MACOSX_RPATH to ON
   cmake_policy(SET CMP0042 NEW)
+endif()
+if(POLICY CMP0078)
+  # Set MACOSX_RPATH to ON
+  cmake_policy(SET CMP0078 NEW)
 endif()
 
 # Some useful macros to ease CMakeLists.txt file writing
@@ -148,29 +142,15 @@ macro ( ot_add_current_dir_to_include_dirs )
 endmacro ( ot_add_current_dir_to_include_dirs )
 
 
-# The tests can't be run if this function is absent
-enable_testing ()
-add_custom_target ( tests COMMENT "Build tests" )
-add_custom_target ( check COMMENT "Run pre-installation tests" )
-add_custom_target ( installcheck COMMENT "Run post-installation tests" )
-
-add_subdirectory ( lib )
-add_dependencies ( check cppcheck )
-
-if ( PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND SWIG_FOUND AND BUILD_SHARED_LIBS )
-  add_subdirectory ( python )
-  add_dependencies ( installcheck pyinstallcheck )
-endif ()
-
 set ( CPACK_PACKAGE_NAME          ${PACKAGE_NAME} )
-set ( CPACK_PACKAGE_VERSION_MAJOR 1              )
-set ( CPACK_PACKAGE_VERSION_MINOR 2              )
+set ( CPACK_PACKAGE_VERSION_MAJOR 0              )
+set ( CPACK_PACKAGE_VERSION_MINOR 0              )
 set ( CPACK_PACKAGE_VERSION_PATCH                )
 set ( CPACK_SOURCE_GENERATOR      "TGZ;TBZ2"     )
-set ( CPACK_BINARY_STGZ           "OFF"          )
-set ( CPACK_BINARY_TBZ2           "ON"           )
-set ( CPACK_BINARY_TGZ            "ON"           )
-set ( CPACK_BINARY_TZ             "OFF"          )
+set (CPACK_BINARY_STGZ    OFF CACHE BOOL "STGZ")
+set (CPACK_BINARY_TBZ2    ON  CACHE BOOL "TBZ2")
+set (CPACK_BINARY_TGZ     ON  CACHE BOOL "TGZ" )
+set (CPACK_BINARY_TZ      OFF CACHE BOOL "TZ"  )
 set ( CPACK_SOURCE_IGNORE_FILES "/.git;/build;.*~;${CPACK_SOURCE_IGNORE_FILES}" )
 set ( PACKAGE_NAME           ${CPACK_PACKAGE_NAME} )
 set ( PACKAGE_VERSION        ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR} )
@@ -178,6 +158,22 @@ if ( CPACK_PACKAGE_VERSION_PATCH )
   set ( PACKAGE_VERSION       ${PACKAGE_VERSION}.${CPACK_PACKAGE_VERSION_PATCH} )
 endif ()
 set ( CPACK_SOURCE_PACKAGE_FILE_NAME ${PACKAGE_NAME}-${PACKAGE_VERSION} )
+
+
+# The tests can't be run if this function is absent
+enable_testing ()
+add_custom_target (tests COMMENT "Build tests")
+add_custom_target (check COMMENT "Run pre-installation tests")
+add_custom_target (installcheck COMMENT "Run post-installation tests")
+
+add_subdirectory (lib)
+add_dependencies (check cppcheck)
+
+if (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND SWIG_FOUND)
+  add_subdirectory (python)
+  add_dependencies (installcheck pyinstallcheck)
+endif ()
+
 
 # uninstall target
 configure_file (
@@ -190,7 +186,7 @@ add_custom_target ( uninstall
   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
 )
 
-set ( OTSUBSETINVERSE_LIBRARY                 otsubsetinverse )
+set ( OTSUBSETINVERSE_LIBRARY                 ottemplate )
 set ( OTSUBSETINVERSE_LIBRARIES ${OPENTURNS_LIBRARIES} )
 list ( APPEND OTSUBSETINVERSE_LIBRARIES ${OTSUBSETINVERSE_LIBRARY} )
 set ( OTSUBSETINVERSE_LIBRARY_DIRS ${OPENTURNS_LIBRARY_DIRS} )
@@ -205,55 +201,24 @@ set ( OTSUBSETINVERSE_VERSION_MINOR ${CPACK_PACKAGE_VERSION_MINOR} )
 set ( OTSUBSETINVERSE_VERSION_PATCH ${CPACK_PACKAGE_VERSION_PATCH} )
 set ( OTSUBSETINVERSE_USE_FILE      ${CONFIG_CMAKE_PATH}/UseOTSubsetInverse.cmake )
 
-if (CMAKE_VERSION VERSION_LESS 2.8.8)
-  # CMakePackageConfigHelpers is not available
-  set (PACKAGE_INIT "
-# Generated by a CMake version without CMakePackageConfigHelpers.
-macro(set_and_check _var _value)
-  set(\${_var} \"\${_value}\")
-endmacro(set_and_check _var _value)
-"     )
-  foreach (_var
-      OTSUBSETINVERSE_USE_FILE
-      OTSUBSETINVERSE_ROOT_DIR
-      OTSUBSETINVERSE_INCLUDE_DIR
-      OTSUBSETINVERSE_INCLUDE_DIRS
-      OTSUBSETINVERSE_LIBRARY_DIRS )
-    set(PACKAGE_${_var} ${${_var}})
-  endforeach ()
-  
-configure_file ( ${CMAKE_SOURCE_DIR}/cmake/OTSubsetInverseConfig.cmake.in
-                 ${CMAKE_BINARY_DIR}/OTSubsetInverseConfig.cmake
-                 @ONLY ESCAPE_QUOTES
-               )
+include(CMakePackageConfigHelpers)
+configure_package_config_file (cmake/OTSubsetInverseConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/OTSubsetInverseConfig.cmake
+  INSTALL_DESTINATION ${OTSUBSETINVERSE_CONFIG_CMAKE_PATH}
+  PATH_VARS
+    OTSUBSETINVERSE_USE_FILE
+    OTSUBSETINVERSE_ROOT_DIR
+    OTSUBSETINVERSE_INCLUDE_DIR
+    OTSUBSETINVERSE_INCLUDE_DIRS
+    OTSUBSETINVERSE_LIBRARY_DIRS
+    PYTHON_MODULE_PATH
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
-install ( FILES cmake/UseOTSubsetInverse.cmake 
-                ${CMAKE_BINARY_DIR}/OTSubsetInverseConfig.cmake
-          DESTINATION ${OTSUBSETINVERSE_CONFIG_CMAKE_PATH}
-        )
+write_basic_package_version_file (OTSubsetInverseConfigVersion.cmake VERSION ${OTSUBSETINVERSE_VERSION_STRING} COMPATIBILITY AnyNewerVersion)
 
-else ()
-
-  include(CMakePackageConfigHelpers)
-  configure_package_config_file (
-    cmake/OTSubsetInverseConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/OTSubsetInverseConfig.cmake
-    INSTALL_DESTINATION ${OTSUBSETINVERSE_CONFIG_CMAKE_PATH}
-    PATH_VARS
-      OTSUBSETINVERSE_USE_FILE
-      OTSUBSETINVERSE_ROOT_DIR
-      OTSUBSETINVERSE_INCLUDE_DIR
-      OTSUBSETINVERSE_INCLUDE_DIRS
-      OTSUBSETINVERSE_LIBRARY_DIRS
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
-                                )                   
-  write_basic_package_version_file( OTSubsetInverseConfigVersion.cmake VERSION ${OTSUBSETINVERSE_VERSION_STRING} COMPATIBILITY AnyNewerVersion )               
-
-  install ( FILES cmake/UseOTSubsetInverse.cmake
-                  ${CMAKE_CURRENT_BINARY_DIR}/OTSubsetInverseConfig.cmake
-                  ${CMAKE_CURRENT_BINARY_DIR}/OTSubsetInverseConfigVersion.cmake
-            DESTINATION ${OTSUBSETINVERSE_CONFIG_CMAKE_PATH}
-          )
-endif ()
+install (FILES cmake/UseOTSubsetInverse.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/OTSubsetInverseConfig.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/OTSubsetInverseConfigVersion.cmake
+         DESTINATION ${OTSUBSETINVERSE_CONFIG_CMAKE_PATH})
 
 include (CPack)
