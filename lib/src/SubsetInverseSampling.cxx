@@ -28,6 +28,7 @@
 #include <openturns/Uniform.hxx>
 #include <openturns/RandomGenerator.hxx>
 #include <openturns/PersistentObjectFactory.hxx>
+#include <openturns/CompositeRandomVector.hxx>
 #include "otsubsetinverse/SubsetInverseSampling.hxx"
 
 
@@ -292,7 +293,7 @@ void SubsetInverseSampling::run()
   thresholdDistribution_ = Normal(currentThreshold, sqrt(thresholdVariance));
 
   //update the event with the final threshold
-  Event modified_event = Event(RandomVector(getEvent().getFunction(), getEvent().getAntecedent()), getEvent().getOperator(), currentThreshold);
+  Event modified_event = Event(CompositeRandomVector(getEvent().getFunction(), getEvent().getAntecedent()), getEvent().getOperator(), currentThreshold);
 
   setResult( SubsetInverseSamplingResult(modified_event, probabilityEstimate, varianceEstimate, numberOfSteps_ * getMaximumOuterSampling(), getBlockSize(), sqrt( coefficientOfVariationSquare ), currentThreshold) );
   
