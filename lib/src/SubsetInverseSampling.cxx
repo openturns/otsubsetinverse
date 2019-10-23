@@ -18,6 +18,9 @@
  *  along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+#include "otsubsetinverse/SubsetInverseSampling.hxx"
+
 #include <openturns/TruncatedDistribution.hxx>
 #include <openturns/KernelSmoothing.hxx>
 #include <openturns/Normal.hxx>
@@ -29,8 +32,7 @@
 #include <openturns/RandomGenerator.hxx>
 #include <openturns/PersistentObjectFactory.hxx>
 #include <openturns/CompositeRandomVector.hxx>
-#include "otsubsetinverse/SubsetInverseSampling.hxx"
-
+#include <openturns/ThresholdEvent.hxx>
 
 using namespace OT;
 
@@ -49,7 +51,7 @@ const Scalar SubsetInverseSampling::DefaultBetaMin = 2.0;
 
 /* Default constructor */
 SubsetInverseSampling::SubsetInverseSampling()
-: SimulationAlgorithm()
+: EventSimulation()
 , proposalRange_(0.)
 , conditionalProbability_(0.)
 , iSubset_(false)
@@ -62,12 +64,11 @@ SubsetInverseSampling::SubsetInverseSampling()
 
 
 /* Constructor with parameters */
-SubsetInverseSampling::SubsetInverseSampling(const Event & event,
+SubsetInverseSampling::SubsetInverseSampling(const RandomVector & event,
                                const Scalar targetProbability,
                                const Scalar proposalRange,
                                const Scalar conditionalProbability)
-: SimulationAlgorithm()
-, event_(event)
+: EventSimulation(event)
 , proposalRange_(proposalRange)
 , conditionalProbability_(conditionalProbability)
 , iSubset_(false)
@@ -277,26 +278,29 @@ void SubsetInverseSampling::run()
     probabilityEstimatePerStep_.add(probabilityEstimate);
     coefficientOfVariationPerStep_.add(sqrt(coefficientOfVariationSquare));
     thresholdCoefficientOfVariationPerStep_.add(sqrt(thresholdCoefficientOfVariationSquare));
-    
+
     // stop if the number of subset steps is too high, else results are not numerically defined anymore
     if ( fabs( pow( probabilityEstimate, 2.) ) < SpecFunc::MinScalar )
-      throw NotDefinedException(HERE) << "Probability estimate too low: " << probabilityEstimate;
+      throw NotDefinedException(HERE) << "Probability estimate too small: " << probabilityEstimate;
 
     // compute variance estimate
     varianceEstimate = coefficientOfVariationSquare * pow( probabilityEstimate, 2. );
     thresholdVariance = thresholdCoefficientOfVariationSquare * pow( currentThreshold, 2. );
 
     ++ numberOfSteps_;
+
+    if (stopCallback_.first && stopCallback_.first(stopCallback_.second))
+      throw InternalException(HERE) << "User stopped simulation";
   }
 
   // define the threshold distribution
   thresholdDistribution_ = Normal(currentThreshold, sqrt(thresholdVariance));
 
   //update the event with the final threshold
-  Event modified_event = Event(CompositeRandomVector(getEvent().getFunction(), getEvent().getAntecedent()), getEvent().getOperator(), currentThreshold);
+  RandomVector modified_event = ThresholdEvent(CompositeRandomVector(getEvent().getFunction(), getEvent().getAntecedent()), getEvent().getOperator(), currentThreshold);
 
   setResult( SubsetInverseSamplingResult(modified_event, probabilityEstimate, varianceEstimate, numberOfSteps_ * getMaximumOuterSampling(), getBlockSize(), sqrt( coefficientOfVariationSquare ), currentThreshold) );
-  
+
   // keep the event sample if requested
   if (keepEventSample_)
   {
@@ -615,11 +619,6 @@ void SubsetInverseSampling::setBetaMin(Scalar betaMin)
   betaMin_ = betaMin;
 }
 
-Event SubsetInverseSampling::getEvent() const
-{
-  return event_;
-}
-
 void SubsetInverseSampling::setResult(const SubsetInverseSamplingResult & result)
 {
   result_ = result;
@@ -635,7 +634,7 @@ String SubsetInverseSampling::__repr__() const
 {
   OSS oss;
   oss << "class=" << getClassName()
-      << " derived from " << SimulationAlgorithm::__repr__()
+      << " derived from " << EventSimulation::__repr__()
       << " event=" << event_
       << " targetProbability=" << targetProbability_
       << " proposalRange=" << proposalRange_
@@ -648,7 +647,7 @@ String SubsetInverseSampling::__repr__() const
 /* Method save() stores the object through the StorageManager */
 void SubsetInverseSampling::save(Advocate & adv) const
 {
-  SimulationAlgorithm::save(adv);
+  EventSimulation::save(adv);
   adv.saveAttribute("targetProbability", targetProbability_);
   adv.saveAttribute("proposalRange_", proposalRange_);
   adv.saveAttribute("conditionalProbability_", conditionalProbability_);
@@ -667,7 +666,7 @@ void SubsetInverseSampling::save(Advocate & adv) const
 /* Method load() reloads the object from the StorageManager */
 void SubsetInverseSampling::load(Advocate & adv)
 {
-  SimulationAlgorithm::load(adv);
+  EventSimulation::load(adv);
   adv.loadAttribute("targetProbability", targetProbability_);
   adv.loadAttribute("proposalRange_", proposalRange_);
   adv.loadAttribute("conditionalProbability_", conditionalProbability_);

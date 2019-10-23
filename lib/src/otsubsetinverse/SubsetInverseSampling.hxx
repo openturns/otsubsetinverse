@@ -21,7 +21,7 @@
 #ifndef OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX
 #define OTSUBSETINVERSE_SUBSETINVERSESAMPLING_HXX
 
-#include <openturns/SimulationAlgorithm.hxx>
+#include <openturns/EventSimulation.hxx>
 #include <openturns/StandardEvent.hxx>
 #include "otsubsetinverse/SubsetInverseSamplingResult.hxx"
 
@@ -30,7 +30,7 @@ namespace OTSubsetInverse
 
 
 class OTSUBSETINVERSE_API SubsetInverseSampling
-: public OT::SimulationAlgorithm
+: public OT::EventSimulation
 {
 CLASSNAME
 public:
@@ -49,16 +49,13 @@ public:
 
 
   /** Constructor with parameters */
-  SubsetInverseSampling(const OT::Event & event,
+  SubsetInverseSampling(const OT::RandomVector & event,
                  const OT::Scalar targetProbability,
                  const OT::Scalar proposalRange = DefaultProposalRange,
                  const OT::Scalar conditionalProbability = DefaultConditionalProbability);
 
   /** Virtual constructor */
   virtual SubsetInverseSampling * clone() const;
-
-  /** Event accessor */
-  OT::Event getEvent() const;
 
   /** Result accessor */
   SubsetInverseSamplingResult getResult() const;
@@ -74,22 +71,22 @@ public:
   /** final target probability */
   void setTargetProbability(OT::Scalar targetProbability);
   OT::Scalar getTargetProbability() const;
-  
+
   /** Accessor to the achieved number of steps */
   OT::UnsignedInteger getNumberOfSteps();
 
-  OT::Scalar getThresholdConfidenceLength(const OT::Scalar level = OT::ResourceMap::GetAsScalar( "SimulationResultImplementation-DefaultConfidenceLevel" )) const;
-    
+  OT::Scalar getThresholdConfidenceLength(const OT::Scalar level = OT::ResourceMap::GetAsScalar("ProbabilitySimulationResult-DefaultConfidenceLevel")) const;
+
   /** Stepwise result accessors */
   OT::Point getThresholdPerStep() const;
   OT::Point getGammaPerStep() const;
   OT::Point getCoefficientOfVariationPerStep() const;
   OT::Point getProbabilityEstimatePerStep() const;
   OT::Point getThresholdCoefficientOfVariationPerStep() const;
-  
+
   /** Keep event sample */
   void setKeepEventSample(bool keepEventSample);
-  
+
   /** Event input/output sample accessor */
   OT::Sample getEventInputSample() const;
   OT::Sample getEventOutputSample() const;
@@ -101,7 +98,7 @@ public:
   /** i-subset */
   void setISubset(OT::Bool iSubset);
   void setBetaMin(OT::Scalar betaMin);
-  
+
   /** Performs the actual computation. */
   void run();
 
@@ -129,15 +126,12 @@ private:
 
   /** Sort new seeds */
   void initializeSeed(OT::Scalar threshold);
-  
+
   /** Compute the correlation on markov chains at the current state of the algorithm */
   OT::Scalar computeVarianceGamma(OT::Scalar currentFailureProbability, OT::Scalar threshold);
 
   /** Generate new points in the conditional failure domain */
   void generatePoints(OT::Scalar threshold);
-
-  // The event we are computing the probability of
-  OT::Event event_;
 
   // The result
   SubsetInverseSamplingResult result_;

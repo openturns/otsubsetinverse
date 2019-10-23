@@ -37,7 +37,7 @@ public:
   SubsetInverseSamplingResult();
 
   /** Constructor with parameters */
-  SubsetInverseSamplingResult(const OT::Event & event,
+  SubsetInverseSamplingResult(const OT::RandomVector & event,
                        const OT::Scalar probabilityEstimate,
                        const OT::Scalar varianceEstimate,
                        const OT::UnsignedInteger outerSampling,

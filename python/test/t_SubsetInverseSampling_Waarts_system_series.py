@@ -62,7 +62,7 @@ vect = RandomVector(myDistribution)
 output = CompositeRandomVector(limitState, vect)
 
 threshold = 0.0
-myEvent = Event(output, ComparisonOperator(Less()), threshold)
+myEvent = ThresholdEvent(output, ComparisonOperator(Less()), threshold)
 
 ###########################################################################
 # Computation Monte Carlo

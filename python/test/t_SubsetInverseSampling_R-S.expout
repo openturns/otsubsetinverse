@@ -15,12 +15,12 @@ Limit state calls = 1000000
 ************************** SUBSET SAMPLING ************************
 *******************************************************************
 Pf estimation = 2.00000e-04
-Pf Variance estimation = 4.27120e-10
-CoV = 0.10333
-90% Confidence Interval = 6.79880e-05
-CI at 90% =[ 1.66006e-04 ; 2.33994e-04 ]
-Threshold = -4.07212e-02
-CI threshold at 90% =[ -6.10712e-02 ; -2.03711e-02 ]
+Pf Variance estimation = 3.55352e-10
+CoV = 0.09425
+90% Confidence Interval = 6.20136e-05
+CI at 90% =[ 1.68993e-04 ; 2.31007e-04 ]
+Threshold = -4.97416e-03
+CI threshold at 90% =[ -1.84837e-02 ; 8.53544e-03 ]
 Limit state calls = 40000
 *******************************************************************
 
