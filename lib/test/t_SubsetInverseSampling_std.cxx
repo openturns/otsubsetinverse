@@ -5,10 +5,8 @@
 using namespace OT;
 using namespace OTSubsetInverse;
 
-int main(int argc, char **argv)
+int main()
 {
-  RandomGenerator::SetSeed(0);
-
   Distribution myDistribution = Normal();
   RandomVector vect(myDistribution);
   
