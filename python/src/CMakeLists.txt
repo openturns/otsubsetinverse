@@ -26,14 +26,21 @@ macro ( ot_add_python_module MODULENAME SOURCEFILE )
     elseif(${it} MATCHES ".*_doc\\.i\\.in$")
       # handle docstring generation
       set (DOCSTRING_IN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${it})
-      get_filename_component ( DOCSTRING_FILE_BASENAME ${DOCSTRING_IN_FILE} NAME_WE )
-      add_custom_target ( generate_${DOCSTRING_FILE_BASENAME}
-                          COMMAND ${CMAKE_COMMAND} -DDOCSTRING_IN_FILE=${DOCSTRING_IN_FILE} -DDOCSTRING_FILE=${CMAKE_CURRENT_BINARY_DIR}/${DOCSTRING_FILE_BASENAME}.i -P ${CMAKE_SOURCE_DIR}/cmake/escape_backslash_x4.cmake
-                          DEPENDS ${DOCSTRING_IN_FILE} )
-      add_dependencies ( generate_docstrings generate_${DOCSTRING_FILE_BASENAME} )
-      list ( APPEND SWIGFILES ${CMAKE_CURRENT_BINARY_DIR}/${DOCSTRING_FILE_BASENAME}.i )
+      get_filename_component (DOCSTRING_FILE_BASENAME ${DOCSTRING_IN_FILE} NAME_WE)
+      # https://github.com/swig/swig/issues/1273
+      option (SWIG_FORCE_DOUBLE_ESCAPE_BACKSLASH "Force double escaping of backslashes" OFF)
+      mark_as_advanced (SWIG_FORCE_DOUBLE_ESCAPE_BACKSLASH)
+      set (TIMES x1)
+      if ((SWIG_VERSION VERSION_LESS 4) OR SWIG_FORCE_DOUBLE_ESCAPE_BACKSLASH)
+        set (TIMES x2)
+      endif ()
+      add_custom_target (generate_${DOCSTRING_FILE_BASENAME}
+                          COMMAND ${CMAKE_COMMAND} -DDOCSTRING_IN_FILE=${DOCSTRING_IN_FILE} -DDOCSTRING_FILE=${CMAKE_CURRENT_BINARY_DIR}/${DOCSTRING_FILE_BASENAME}.i -DTIMES=${TIMES} -P ${CMAKE_SOURCE_DIR}/cmake/escape_backslash.cmake
+                          DEPENDS ${DOCSTRING_IN_FILE})
+      add_dependencies ( generate_docstrings generate_${DOCSTRING_FILE_BASENAME})
+      list (APPEND SWIGFILES ${CMAKE_CURRENT_BINARY_DIR}/${DOCSTRING_FILE_BASENAME}.i)
     else ()
-      set ( swig_other_sources ${swig_other_sources} "${it}" )
+      set (swig_other_sources ${swig_other_sources} "${it}")
     endif ()
   endforeach ()
 
@@ -141,6 +148,7 @@ if (SPHINX_FOUND)
     ${SPHINX_SOURCE_DIR}/*.txt
     ${SPHINX_SOURCE_DIR}/*.in
     ${SPHINX_SOURCE_DIR}/*.inv
+    ${SPHINX_SOURCE_DIR}/*.ipynb
   )
 
   # copy sphinx sources
@@ -175,7 +183,7 @@ if (SPHINX_FOUND)
     endif ()
   endforeach()
 
-  set (SPHINX_FLAGS "-W" CACHE STRING "sphinx flags")
+  set (SPHINX_FLAGS "-W -T" CACHE STRING "sphinx flags")
   separate_arguments (SPHINX_FLAGS)
 
   # generate sphinx rule for each format
@@ -211,3 +219,10 @@ if (SPHINX_FOUND)
 
   install (DIRECTORY ${SPHINX_BINARY_DIR}/html DESTINATION ${OTSUBSETINVERSE_DOC_PATH})
 endif ()
+
+# wheel files
+configure_file (METADATA.in METADATA @ONLY)
+configure_file (WHEEL.in WHEEL @ONLY)
+install (DIRECTORY DESTINATION ${OTSUBSETINVERSE_PYTHON_MODULE_PATH}/${PACKAGE_NAME}-${PACKAGE_VERSION}.dist-info)
+install (FILES ${CMAKE_CURRENT_BINARY_DIR}/METADATA ${CMAKE_CURRENT_BINARY_DIR}/WHEEL
+         DESTINATION ${OTSUBSETINVERSE_PYTHON_MODULE_PATH}/${PACKAGE_NAME}-${PACKAGE_VERSION}.dist-info)
