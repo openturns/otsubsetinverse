@@ -306,12 +306,12 @@ void SubsetInverseSampling::run()
   {
     eventInputSample_ = Sample(0, dimension_);  
     eventOutputSample_ = Sample (0, getEvent().getFunction().getOutputDimension());
-    for ( UnsignedInteger i = 0; i < currentPointSample_.getSize(); ++ i )
+    for (UnsignedInteger i = 0; i < currentPointSample_.getSize(); ++ i)
     {
-      if ( getEvent().getOperator()( currentLevelSample_[i][0], currentThreshold ) )
+      if (getEvent().getOperator()(currentLevelSample_(i, 0), currentThreshold))
       {
-        eventInputSample_.add( standardEvent_.getAntecedent().getDistribution().getInverseIsoProbabilisticTransformation()(currentPointSample_[i]) );
-        eventOutputSample_.add( currentLevelSample_[i] );
+        eventInputSample_.add(getEvent().getAntecedent().getDistribution().getInverseIsoProbabilisticTransformation()(currentPointSample_[i]));
+        eventOutputSample_.add(currentLevelSample_[i]);
       }
     }
   }
@@ -333,9 +333,9 @@ Sample SubsetInverseSampling::computeBlockSample()
 Scalar SubsetInverseSampling::computeThreshold()
 {
   // compute the quantile according to the event operator
-  Scalar ratio = getEvent().getOperator()(1.0, 2.0) ?  conditionalProbability_ : 1.0 - conditionalProbability_;
+  const Scalar ratio = getEvent().getOperator()(1.0, 2.0) ?  conditionalProbability_ : 1.0 - conditionalProbability_;
   
-  Scalar currentThreshold = currentLevelSample_.computeQuantile( ratio )[0];
+  const Scalar currentThreshold = currentLevelSample_.computeQuantile( ratio )[0];
   
   return currentThreshold;
 }
@@ -348,14 +348,14 @@ Scalar SubsetInverseSampling::computeProbability(Scalar probabilityEstimateFacto
   Scalar probabilityEstimate = 0.0;
   Scalar varianceEstimate = 0.0;
   
-  for ( UnsignedInteger i = 0; i < maximumOuterSampling; ++ i )
+  for (UnsignedInteger i = 0; i < maximumOuterSampling; ++ i)
   {
     const Scalar size = i + 1.0;
     Scalar meanBlock = 0.0;
     Scalar varianceBlock = 0.0;
-    for ( UnsignedInteger j = 0 ; j < blockSize; ++ j )
+    for (UnsignedInteger j = 0 ; j < blockSize; ++ j)
     {
-      if ( getEvent().getOperator()( currentLevelSample_[ i*blockSize+j ][0], threshold ) )
+      if (getEvent().getOperator()( currentLevelSample_(i*blockSize+j, 0), threshold))
       {
         // update local mean and variance
         meanBlock += 1.0 / blockSize;
@@ -366,7 +366,7 @@ Scalar SubsetInverseSampling::computeProbability(Scalar probabilityEstimateFacto
     
     // update global mean and variance
     varianceEstimate = (varianceBlock + (size - 1.0) * varianceEstimate) / size + (1.0 - 1.0 / size) * (probabilityEstimate - meanBlock) * (probabilityEstimate - meanBlock) / size;
-    probabilityEstimate = (meanBlock + (size - 1.0) * probabilityEstimate) / size;
+    probabilityEstimate = std::min(1.0, (meanBlock + (size - 1.0) * probabilityEstimate) / size);
     
     // store convergence at each block
     Point convergencePoint(2);
@@ -474,7 +474,7 @@ void SubsetInverseSampling::generatePoints(Scalar threshold)
       for (UnsignedInteger k = 0; k < dimension_; ++ k)
       {
         // compute ratio
-        Scalar ratio = std::min(1.0, exp(0.5 * (oldPoint[k] * oldPoint[k] - newPoint[k] * newPoint[k])));
+        const Scalar ratio = std::min(1.0, exp(0.5 * (oldPoint[k] * oldPoint[k] - newPoint[k] * newPoint[k])));
 
         // accept new point with probability ratio
         if (ratio < uniform[k])
