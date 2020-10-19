@@ -47,7 +47,6 @@ public:
   /** Default Constructor */
   SubsetInverseSampling();
 
-
   /** Constructor with parameters */
   SubsetInverseSampling(const OT::RandomVector & event,
                  const OT::Scalar targetProbability,
@@ -55,7 +54,7 @@ public:
                  const OT::Scalar conditionalProbability = DefaultConditionalProbability);
 
   /** Virtual constructor */
-  virtual SubsetInverseSampling * clone() const;
+  SubsetInverseSampling * clone() const override;
 
   /** Result accessor */
   SubsetInverseSamplingResult getResult() const;
@@ -100,23 +99,23 @@ public:
   void setBetaMin(OT::Scalar betaMin);
 
   /** Performs the actual computation. */
-  void run();
+  void run() override;
 
   /** String converter */
-  OT::String __repr__() const;
+  OT::String __repr__() const override;
 
   /** Method save() stores the object through the StorageManager */
-  virtual void save(OT::Advocate & adv) const;
+  void save(OT::Advocate & adv) const override;
 
   /** Method load() reloads the object from the StorageManager */
-  virtual void load(OT::Advocate & adv);
+  void load(OT::Advocate & adv) override;
 
 private:
   /** Result accessor */
   void setResult(const SubsetInverseSamplingResult & result);
 
   /** Compute the block sample */
-  OT::Sample computeBlockSample();
+  OT::Sample computeBlockSample() override;
 
   /** Compute the new threshold corresponding to the conditional failure probability */
   OT::Scalar computeThreshold();

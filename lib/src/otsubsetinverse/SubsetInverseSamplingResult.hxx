@@ -46,19 +46,19 @@ public:
                        const OT::Scalar threshold = 0.0);
 
   /** Virtual constructor */
-  virtual SubsetInverseSamplingResult * clone() const;
+  SubsetInverseSamplingResult * clone() const override;
 
   /** Coefficient of variation estimate accessor */
-  virtual OT::Scalar getCoefficientOfVariation() const;
+  OT::Scalar getCoefficientOfVariation() const override;
 
   /** String converter */
-  virtual OT::String __repr__() const;
+  OT::String __repr__() const override;
 
   /** Method save() stores the object through the StorageManager */
-  virtual void save(OT::Advocate & adv) const;
+  void save(OT::Advocate & adv) const override;
 
   /** Method load() reloads the object from the StorageManager */
-  virtual void load(OT::Advocate & adv);
+  void load(OT::Advocate & adv) override;
 
 protected:
   OT::Scalar coefficientOfVariation_;

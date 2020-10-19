@@ -127,8 +127,7 @@ print("90% Confidence Interval =", "%.5e" % length90SS)
 print("CI at 90% =[", "%.5e" % (PFSS-0.5*length90SS) ,
       "; %.5e" % (PFSS+0.5*length90SS) , "]")
 print("Threshold = %.5e" % thresholdSS)
-print("CI threshold at 90% =[", "%.5e" % (thresholdSS-0.5*thLengthSS) ,
-      "; %.5e" % (thresholdSS+0.5*thLengthSS) , "]")
+#print("CI threshold at 90% =[", "%.5e" % (thresholdSS-0.5*thLengthSS), "; %.5e" % (thresholdSS+0.5*thLengthSS) , "]")
 print("Limit state calls =", N_SS)
 print("*******************************************************************")
 print("")
