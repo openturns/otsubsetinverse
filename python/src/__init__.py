@@ -15,5 +15,5 @@ if sys.platform.startswith('win'):
 
 from .otsubsetinverse import *
 
-__version__ = '1.7'
+__version__ = '1.8'
 
