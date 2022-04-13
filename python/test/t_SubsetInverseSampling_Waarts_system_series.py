@@ -4,7 +4,6 @@
 # series benchmark
 # Taken from P. H. Waarts, Structural reliability using finite element analysis, 2000.
 
-from __future__ import print_function, division
 from openturns import *
 from math import *
 from otsubsetinverse import *

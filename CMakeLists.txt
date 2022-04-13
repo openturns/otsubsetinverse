@@ -40,7 +40,7 @@ set (CMAKE_CXX_STANDARD 11)
 if (BUILD_PYTHON)
   find_package (SWIG 3)
 
-  find_package (PythonInterp)
+  find_package (PythonInterp 3)
   find_package (PythonLibs ${PYTHON_VERSION_STRING} EXACT)
   include (FindPythonModule)
 
@@ -129,7 +129,7 @@ endmacro ( ot_add_current_dir_to_include_dirs )
 
 set ( CPACK_PACKAGE_NAME          ${PACKAGE_NAME} )
 set ( CPACK_PACKAGE_VERSION_MAJOR 1              )
-set ( CPACK_PACKAGE_VERSION_MINOR 8              )
+set ( CPACK_PACKAGE_VERSION_MINOR 9              )
 set ( CPACK_PACKAGE_VERSION_PATCH                )
 set ( CPACK_SOURCE_GENERATOR      "TGZ;TBZ2"     )
 set (CPACK_BINARY_STGZ    OFF CACHE BOOL "STGZ")

@@ -20,7 +20,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
 -DBUILD_SHARED_LIBS:BOOL=ON
 
 Name:           otsubsetinverse
-Version:        1.8
+Version:        1.9
 Release:        0%{?dist}
 Summary:        OpenTURNS module
 Group:          System Environment/Libraries

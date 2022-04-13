@@ -3,7 +3,6 @@
 # This script shows the use of the module SubsetInverse on the model G=R-S,
 # with R~N, S~N
 
-from __future__ import print_function, division
 from openturns import *
 from math import *
 from otsubsetinverse import *
