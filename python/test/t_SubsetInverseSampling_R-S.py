@@ -3,42 +3,34 @@
 # This script shows the use of the module SubsetInverse on the model G=R-S,
 # with R~N, S~N
 
-from openturns import *
-from math import *
-from otsubsetinverse import *
+import openturns as ot
+import otsubsetinverse
 
-TESTPREAMBLE()
+ot.TESTPREAMBLE()
 
-def cleanScalar(inScalar) :
-    if (fabs(inScalar) < 1.e-10) :
+
+def cleanScalar(inScalar):
+    if abs(inScalar) < 1.0e-10:
         inScalar = 0.0
     return inScalar
-
-###########################################################################
-# initialize the random generator
-###########################################################################
-
-RandomGenerator.SetSeed(0)
 
 
 ###########################################################################
 # Physical model
 ###########################################################################
 
-limitState = SymbolicFunction(['u1', 'u2'], ['u1-u2'])
+limitState = ot.SymbolicFunction(["u1", "u2"], ["u1-u2"])
 dim = limitState.getInputDimension()
 
 ###########################################################################
 # Probabilistic model
 ###########################################################################
 
-mean = Point(dim, 0.0)
-mean[0] = 7.
-mean[1] = 2.
-sigma = Point(dim, 1.0)
+mean = [7.0, 2.0]
+sigma = [1.0] * 2
 
-R = IdentityMatrix(dim)
-myDistribution = Normal(mean, sigma, R)
+R = ot.IdentityMatrix(dim)
+myDistribution = ot.Normal(mean, sigma, R)
 
 start = myDistribution.getMean()
 
@@ -46,12 +38,12 @@ start = myDistribution.getMean()
 # Limit state
 ###########################################################################
 
-vect = RandomVector(myDistribution)
+vect = ot.RandomVector(myDistribution)
 
-output = CompositeRandomVector(limitState, vect)
+output = ot.CompositeRandomVector(limitState, vect)
 
-threshold = 0.
-myEvent = ThresholdEvent(output, ComparisonOperator(Less()), threshold)
+threshold = 0.0
+myEvent = ot.ThresholdEvent(output, ot.Less(), threshold)
 
 ###########################################################################
 # Computation Monte Carlo
@@ -59,9 +51,9 @@ myEvent = ThresholdEvent(output, ComparisonOperator(Less()), threshold)
 bs = 1
 
 # Monte Carlo
-experiment = MonteCarloExperiment()
-myMC = ProbabilitySimulationAlgorithm(myEvent, experiment)
-myMC.setMaximumOuterSampling(int(1e6)// bs)
+experiment = ot.MonteCarloExperiment()
+myMC = ot.ProbabilitySimulationAlgorithm(myEvent, experiment)
+myMC.setMaximumOuterSampling(int(1e6) // bs)
 myMC.setBlockSize(bs)
 myMC.setMaximumCoefficientOfVariation(-1)
 myMC.run()
@@ -75,14 +67,14 @@ PFMC = ResultMC.getProbabilityEstimate()
 CVMC = ResultMC.getCoefficientOfVariation()
 Variance_PF_MC = ResultMC.getVarianceEstimate()
 length90MC = ResultMC.getConfidenceLength(0.90)
-N_MC = ResultMC.getOuterSampling()*ResultMC.getBlockSize()
+N_MC = ResultMC.getOuterSampling() * ResultMC.getBlockSize()
 
 ###########################################################################
 # Computation SubsetSampling
 ###########################################################################
 
 finalTargetProbability = 0.0002
-mySS = SubsetInverseSampling(myEvent, finalTargetProbability)
+mySS = otsubsetinverse.SubsetInverseSampling(myEvent, finalTargetProbability)
 mySS.setMaximumOuterSampling(10000 // bs)
 mySS.setBlockSize(bs)
 mySS.run()
@@ -96,7 +88,7 @@ PFSS = ResultSS.getProbabilityEstimate()
 CVSS = ResultSS.getCoefficientOfVariation()
 Variance_PF_SS = ResultSS.getVarianceEstimate()
 length90SS = ResultSS.getConfidenceLength(0.90)
-N_SS = ResultSS.getOuterSampling()*ResultSS.getBlockSize()
+N_SS = ResultSS.getOuterSampling() * ResultSS.getBlockSize()
 thresholdSS = mySS.getThresholdPerStep()[-1]
 thLengthSS = mySS.getThresholdConfidenceLength(0.90)
 
@@ -109,9 +101,13 @@ print("*******************************************************************")
 print("Pf estimation = %.5e" % PFMC)
 print("Pf Variance estimation = %.5e" % Variance_PF_MC)
 print("CoV = %.5f" % CVMC)
-print("90% Confidence Interval =" , "%.5e" % length90MC)
-print("CI at 90% =[", "%.5e" % (PFMC-0.5*length90MC) ,
-      "; %.5e" % (PFMC+0.5*length90MC) , "]")
+print("90% Confidence Interval =", "%.5e" % length90MC)
+print(
+    "CI at 90% =[",
+    "%.5e" % (PFMC - 0.5 * length90MC),
+    "; %.5e" % (PFMC + 0.5 * length90MC),
+    "]",
+)
 print("Threshold = %.5e" % threshold)
 print("Limit state calls =", N_MC)
 print("*******************************************************************")
@@ -123,10 +119,13 @@ print("Pf estimation = %.5e" % PFSS)
 print("Pf Variance estimation = %.5e" % Variance_PF_SS)
 print("CoV = %.5f" % CVSS)
 print("90% Confidence Interval =", "%.5e" % length90SS)
-print("CI at 90% =[", "%.5e" % (PFSS-0.5*length90SS) ,
-      "; %.5e" % (PFSS+0.5*length90SS) , "]")
+print(
+    "CI at 90% =[",
+    "%.5e" % (PFSS - 0.5 * length90SS),
+    "; %.5e" % (PFSS + 0.5 * length90SS),
+    "]",
+)
 print("Threshold = %.5e" % thresholdSS)
-#print("CI threshold at 90% =[", "%.5e" % (thresholdSS-0.5*thLengthSS), "; %.5e" % (thresholdSS+0.5*thLengthSS) , "]")
 print("Limit state calls =", N_SS)
 print("*******************************************************************")
 print("")

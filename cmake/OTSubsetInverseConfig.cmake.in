@@ -9,7 +9,6 @@
 
 # Use the following variables to compile and link against OTSubsetInverse:
 #  OTSUBSETINVERSE_FOUND          - True if OTSubsetInverse was found on your system
-#  OTSUBSETINVERSE_USE_FILE       - The file making OTSubsetInverse usable
 #  OTSUBSETINVERSE_DEFINITIONS    - Definitions needed to build with OTSubsetInverse
 #  OTSUBSETINVERSE_INCLUDE_DIRS   - List of directories where OTSubsetInverse' header file are
 #  OTSUBSETINVERSE_LIBRARY        - Library name
@@ -22,7 +21,6 @@
 #  OTSUBSETINVERSE_VERSION_PATCH  - The patch version of OTSubsetInverse
 
 set ( OTSUBSETINVERSE_FOUND 1 )
-set ( OTSUBSETINVERSE_USE_FILE     "@OTSUBSETINVERSE_USE_FILE@" )
 
 set ( OTSUBSETINVERSE_DEFINITIONS  "@OTSUBSETINVERSE_DEFINITIONS@" )
 set ( OTSUBSETINVERSE_INCLUDE_DIR  "@OTSUBSETINVERSE_INCLUDE_DIR@" )
@@ -39,9 +37,5 @@ set ( OTSUBSETINVERSE_VERSION_PATCH  "@OTSUBSETINVERSE_VERSION_PATCH@" )
 
 set (OTSUBSETINVERSE_PYTHON@PYTHON_VERSION_MAJOR@_MODULE_PATH "@PYTHON_MODULE_PATH@")
 
-# CMAKE_CURRENT_LIST_DIR defined since 2.8.3
-if (CMAKE_VERSION VERSION_LESS 2.8.3)
-  get_filename_component (CMAKE_CURRENT_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
-endif ()
 # Our library dependencies (contains definitions for IMPORTED targets)
 include (${CMAKE_CURRENT_LIST_DIR}/OTSubsetInverse-Targets.cmake)
