@@ -15,5 +15,5 @@ import openturns as _ot
 
 from .otsubsetinverse import *
 
-__version__ = '1.9'
+__version__ = '1.10'
 

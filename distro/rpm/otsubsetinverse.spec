@@ -20,7 +20,7 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
 -DBUILD_SHARED_LIBS:BOOL=ON
 
 Name:           otsubsetinverse
-Version:        1.9
+Version:        1.10
 Release:        0%{?dist}
 Summary:        OpenTURNS module
 Group:          System Environment/Libraries
@@ -66,7 +66,6 @@ Python textual interface to OTSubsetInverse uncertainty library
 %build
 %cmake -DINSTALL_DESTDIR:PATH=%{buildroot} \
        -DCMAKE_SKIP_INSTALL_RPATH:BOOL=ON \
-       -DPYTHON_EXECUTABLE=%{__python} \
        -DUSE_SPHINX=OFF .
 make %{?_smp_mflags}
 
